@@ -252,12 +252,30 @@ galleryUpload.addEventListener('change', (event) => {
   if (!conference) return;
   Array.from(event.target.files).forEach((file) => {
     const reader = new FileReader();
+    reader.addEventListener('error', () => showMessage(`Could not read ${file.name}.`));
     reader.addEventListener('load', () => {
-      conference.images.push({ name: file.name, data: reader.result });
-      saveSiteData(data);
-      renderGalleryPreview();
-      renderEvents();
-      showMessage('Gallery image uploaded.');
+      const image = new Image();
+      image.addEventListener('error', () => showMessage(`Could not process ${file.name}.`));
+      image.addEventListener('load', () => {
+        const maxDimension = 1600;
+        const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        const galleryImage = { name: file.name, data: canvas.toDataURL('image/jpeg', 0.82) };
+        conference.images.push(galleryImage);
+        try {
+          saveSiteData(data);
+          renderGalleryPreview();
+          renderEvents();
+          showMessage('Gallery image uploaded.');
+        } catch (error) {
+          conference.images.pop();
+          showMessage('Image is too large to save. Try a smaller image.');
+        }
+      });
+      image.src = reader.result;
     });
     reader.readAsDataURL(file);
   });

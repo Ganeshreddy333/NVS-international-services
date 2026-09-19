@@ -69,7 +69,7 @@ function getSiteData() {
       pageContent: { ...baseData.pageContent, ...(savedData.pageContent || {}) },
       websiteInformation: { ...baseData.websiteInformation, ...(savedData.websiteInformation || {}) },
       partnerships: Array.isArray(savedData.partnerships) ? savedData.partnerships : structuredClone(baseData.partnerships),
-      conferences: Array.isArray(savedData.conferences) && savedData.conferences.length ? savedData.conferences : structuredClone(baseData.conferences),
+      conferences: Array.isArray(savedData.conferences) && savedData.conferences.length ? savedData.conferences.map((conference) => ({ ...conference, images: Array.isArray(conference.images) ? conference.images : [] })) : structuredClone(baseData.conferences),
       inquiries: Array.isArray(savedData.inquiries) ? savedData.inquiries : []
     };
 
