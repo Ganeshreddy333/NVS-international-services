@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private Admin | NVS International Services</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=20260919-zylogic">
+  <link rel="stylesheet" href="pages.css?v=20260919-reference2">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html"><span class="brand-mark">NVS</span><span class="brand-name">NVS International<br>Services</span></a>
+    <nav class="main-nav"><a href="index.html">View Website <span>↗</span></a></nav>
+  </header>
+
+  <section class="admin-login" id="admin-login">
+    <div class="login-panel">
+      <p class="eyebrow" style="color:var(--teal)">NVS INTERNATIONAL SERVICES / PRIVATE ACCESS</p>
+      <h1>Admin<br><em>Sign in.</em></h1>
+      <p>Use your authorized credentials to manage website content, events, galleries, and enquiries.</p>
+      <form id="admin-login-form">
+        <div class="field"><label for="admin-username">Username</label><input id="admin-username" autocomplete="username" required></div>
+        <div class="field"><label for="admin-password">Password</label><input id="admin-password" type="password" autocomplete="current-password" required></div>
+        <button class="button button-lime" type="submit">Sign In <span>↗</span></button>
+        <p class="login-error" id="admin-login-error" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <div id="admin-app" class="is-hidden">
+    <nav class="admin-tabs" aria-label="Admin sections">
+      <a class="active" href="#content-view" data-admin-view="content-view">Content</a>
+      <a href="#information-view" data-admin-view="information-view">Website Information</a>
+      <a href="#conference-view" data-admin-view="conference-view">Conferences</a>
+      <a href="#partnership-view" data-admin-view="partnership-view">Sponsors / Exhibitors</a>
+      <a href="#media-view" data-admin-view="media-view">Media / Gallery</a>
+      <a href="#enquiries-view" data-admin-view="enquiries-view">Enquiries</a>
+      <a href="#settings-view" data-admin-view="settings-view">Settings</a>
+    </nav>
+    <main class="admin-page">
+      <div class="admin-heading">
+        <div><p class="eyebrow" style="color:var(--teal)">NVS INTERNATIONAL SERVICES / CONTENT MANAGEMENT</p><h1>Admin<br><em>Panel.</em></h1></div>
+        <div class="admin-heading-actions"><p>Update website text, manage upcoming and previous conferences, and add a separate gallery for every event.</p><button class="button button-ghost admin-logout" id="admin-logout" type="button">Sign Out</button></div>
+      </div>
+      <div id="admin-message" class="admin-message"></div>
+      <div class="admin-view is-active" id="content-view">
+      <section class="admin-card admin-page-content" id="page-content">
+        <h2>Website Page Content</h2>
+        <p class="muted">Edit the main heading and introduction for each website page. Existing wording is loaded automatically and changes are saved in this browser.</p>
+        <form id="page-content-form" class="page-content-form">
+          <div class="field"><label for="content-page">Choose page</label><select id="content-page"><option value="home">Home</option><option value="about">About Us</option><option value="conferences">Conferences</option><option value="sponsors">Sponsors</option><option value="exhibitors">Exhibitors</option><option value="gallery">Gallery</option><option value="general">General Information</option><option value="contact">Contact Us</option></select></div>
+          <div class="field"><label for="content-eyebrow">Page label</label><input id="content-eyebrow" required></div>
+          <div class="field"><label for="content-title">Main heading</label><input id="content-title" required></div>
+          <div class="field"><label for="content-text">Introduction text</label><textarea id="content-text" required></textarea></div>
+          <button class="button button-lime" type="submit">Save Page Content <span>↗</span></button>
+        </form>
+      </section>
+      </div>
+      <div class="admin-view" id="information-view">
+        <section class="admin-card" id="company-details">
+          <h2>Company and Contact Information</h2>
+          <form id="company-form">
+            <div class="field"><label for="about-title">About heading</label><input id="about-title" required></div>
+            <div class="field"><label for="about-text">About text</label><textarea id="about-text" required></textarea></div>
+            <div class="field"><label for="email">Email</label><input id="email" type="email" required></div>
+            <div class="field"><label for="phone">Phone</label><input id="phone" required></div>
+            <div class="field"><label for="location">Location</label><input id="location" required></div>
+            <button class="button button-lime" type="submit">Save Company Details <span>↗</span></button>
+          </form>
+        </section>
+        <section class="admin-card website-information-manager"><h2>Whole Website Information</h2><p class="muted">Edit each information group separately. Line-separated items are displayed as separate list entries when used on the website.</p><div id="website-information-fields"></div></section>
+      </div>
+      <div class="admin-view" id="conference-view">
+      <div class="admin-grid">
+        <section class="admin-card" id="conference-manager">
+          <h2>Conference Manager</h2>
+          <form id="conference-form">
+            <input type="hidden" id="conference-id">
+            <div class="field"><label for="conference-title">Conference title</label><input id="conference-title" required></div>
+            <div class="field"><label for="conference-date">Date</label><input id="conference-date" placeholder="March 3–4, 2027" required></div>
+            <div class="field"><label for="conference-status">Status</label><select id="conference-status"><option value="upcoming">Upcoming conference</option><option value="previous">Previous held conference</option></select></div>
+            <div class="field"><label for="conference-description">Description</label><textarea id="conference-description" required></textarea></div>
+            <div class="field"><label for="conference-location">Location or mode</label><input id="conference-location" required></div>
+            <div class="field"><label for="conference-theme">Theme</label><input id="conference-theme" required></div>
+            <button class="button button-lime" type="submit"><span id="conference-submit-label">Add Conference</span> <span>↗</span></button><button class="button button-ghost clear-button" type="button" id="cancel-edit">Clear</button>
+          </form>
+          <h3>Saved conferences</h3><div id="admin-events" class="admin-event-list"></div>
+        </section>
+
+        <aside class="admin-side-panel" aria-label="Conference overview">
+          <span class="panel-kicker">Overview</span>
+          <div class="mini-stat total">
+            <span>Total</span>
+            <strong id="admin-total-conferences">0</strong>
+            <span class="dot" aria-hidden="true"></span>
+          </div>
+          <div class="mini-stat upcoming">
+            <span>Upcoming</span>
+            <strong id="admin-upcoming-count">0</strong>
+            <span class="dot" aria-hidden="true"></span>
+          </div>
+          <div class="mini-stat previous">
+            <span>Previous</span>
+            <strong id="admin-previous-count">0</strong>
+            <span class="dot" aria-hidden="true"></span>
+          </div>
+
+          <div class="status-list">
+            <div class="status-item upcoming">
+              <div>
+                <small>Upcoming</small>
+                <strong id="admin-upcoming-label">0 active</strong>
+              </div>
+              <span class="pill">Live</span>
+            </div>
+            <div class="status-item previous">
+              <div>
+                <small>Previous</small>
+                <strong id="admin-previous-label">0 archived</strong>
+              </div>
+              <span class="pill">History</span>
+            </div>
+          </div>
+
+          <div class="info-card">
+            <h4>Conference notes</h4>
+            <p>Update website text, manage upcoming and previous conferences, and add a separate gallery for every event.</p>
+          </div>
+        </aside>
+      </div>
+      </div>
+      <div class="admin-view" id="partnership-view"><section class="admin-card"><h2>Sponsors and Exhibitors</h2><p class="muted">Add, edit, or remove sponsorship and exhibition packages independently from conferences and gallery media.</p><form id="partnership-form" class="partnership-form"><input type="hidden" id="partnership-id"><div class="field"><label for="partnership-type">Type</label><select id="partnership-type"><option value="sponsor">Sponsor</option><option value="exhibitor">Exhibitor</option></select></div><div class="field"><label for="partnership-name">Name</label><input id="partnership-name" required></div><div class="field"><label for="partnership-price">Price</label><input id="partnership-price" required></div><div class="field"><label for="partnership-title">Heading</label><input id="partnership-title" required></div><div class="field"><label for="partnership-description">Description</label><textarea id="partnership-description" required></textarea></div><div class="field"><label for="partnership-benefits">Benefits, one per line</label><textarea id="partnership-benefits" required></textarea></div><button class="button button-lime" type="submit"><span id="partnership-submit-label">Add Package</span> <span>↗</span></button><button class="button button-ghost clear-button" id="partnership-clear" type="button">Clear</button></form><div id="partnership-list" class="partnership-list"></div></section></div>
+      <div class="admin-view" id="media-view"><section class="admin-card" id="gallery-manager"><h2>Event Gallery Manager</h2><p class="muted">Choose an event, then upload as many images as needed. Images are saved in this browser for the matching event gallery page.</p><div class="field" style="max-width:520px;margin-top:22px"><label for="gallery-event">Choose event</label><select id="gallery-event"></select></div><div class="upload-box"><input id="gallery-upload" type="file" accept="image/*" multiple><p class="muted" style="margin-top:10px">Upload images for the selected event</p></div><div id="gallery-preview" class="gallery-preview"></div></section></div>
+      <div class="admin-view" id="enquiries-view"><section class="admin-card" id="inquiry-manager"><h2>Contact Enquiries</h2><div class="inquiry-list"></div></section></div>
+      <div class="admin-view" id="settings-view"><section class="admin-card"><h2>Settings</h2><p class="muted">Website data is stored in this browser. Use the existing admin controls to update content, conferences, media, and enquiries.</p><button class="button button-ghost admin-logout" id="settings-logout" type="button">Sign Out</button></section></div>
+    </main>
+  </div>
+  <script src="site.js?v=20260919-partners"></script>
+  <script src="auth.js?v=20260919-partners"></script>
+  <script src="admin.js?v=20260919-partners"></script>
+</body>
+</html>

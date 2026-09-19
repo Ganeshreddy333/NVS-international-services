@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 190" role="img" aria-labelledby="title desc">
+  <title id="title">NVS International Services</title>
+  <desc id="desc">NVS International Services Scientific Conferences logo</desc>
+  <defs>
+    <linearGradient id="globe" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d8f4ff"/>
+      <stop offset=".48" stop-color="#2c879a"/>
+      <stop offset="1" stop-color="#0b263e"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(18 13)">
+    <circle cx="82" cy="82" r="54" fill="url(#globe)" stroke="#d7f3ff" stroke-width="4"/>
+    <path d="M35 73c23-25 60-32 94-11M31 96c32-17 72-14 104 7M51 42c18 25 23 57 11 92M103 32c-18 31-22 69-6 105" fill="none" stroke="#e9fbff" stroke-width="3" opacity=".8"/>
+    <g fill="none" stroke="#71c9dd" stroke-width="7" stroke-linecap="round" opacity=".9">
+      <ellipse cx="82" cy="82" rx="91" ry="28" transform="rotate(-28 82 82)"/>
+      <ellipse cx="82" cy="82" rx="91" ry="28" transform="rotate(33 82 82)"/>
+      <ellipse cx="82" cy="82" rx="91" ry="28" transform="rotate(90 82 82)"/>
+    </g>
+    <circle cx="54" cy="55" r="5" fill="#fff"/><circle cx="128" cy="95" r="5" fill="#fff"/><circle cx="95" cy="139" r="5" fill="#fff"/>
+  </g>
+  <text x="192" y="105" fill="#163553" font-family="Arial, sans-serif" font-size="86" font-weight="800" letter-spacing="5">NVS</text>
+  <path d="M195 121h385" stroke="#163553" stroke-width="4"/>
+  <text x="196" y="151" fill="#163553" font-family="Arial, sans-serif" font-size="25" font-weight="700" letter-spacing="2">INTERNATIONAL SERVICES</text>
+  <text x="196" y="178" fill="#163553" font-family="Arial, sans-serif" font-size="17" font-weight="600" letter-spacing="2">SCIENTIFIC CONFERENCES</text>
+</svg>
