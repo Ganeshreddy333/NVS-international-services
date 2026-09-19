@@ -292,6 +292,16 @@ function renderGallery() {
   lightboxPrevious.addEventListener('click', () => { lightboxIndex -= 1; showLightboxImage(); });
   lightboxNext.addEventListener('click', () => { lightboxIndex += 1; showLightboxImage(); });
   lightbox.addEventListener('click', (event) => { if (event.target === lightbox || event.target.classList.contains('lightbox-overlay-click')) closeLightbox(); });
+  let lightboxTouchStartX = 0;
+  lightbox.addEventListener('touchstart', (event) => {
+    lightboxTouchStartX = event.changedTouches[0]?.clientX || 0;
+  }, { passive: true });
+  lightbox.addEventListener('touchend', (event) => {
+    const distance = (event.changedTouches[0]?.clientX || 0) - lightboxTouchStartX;
+    if (Math.abs(distance) < 45) return;
+    lightboxIndex += distance < 0 ? 1 : -1;
+    showLightboxImage();
+  }, { passive: true });
   document.addEventListener('keydown', (event) => {
     if (!lightbox.classList.contains('is-open')) return;
     if (event.key === 'Escape') closeLightbox();
