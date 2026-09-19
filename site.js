@@ -154,6 +154,8 @@ function pageIntro(pageKey, number, eyebrow, title, text) {
 function renderGallery() {
   window.__galleryAutoScrollTimers?.forEach((timer) => window.clearInterval(timer));
   window.__galleryAutoScrollTimers = [];
+  window.__galleryAutoScrollGeneration = (window.__galleryAutoScrollGeneration || 0) + 1;
+  const galleryGeneration = window.__galleryAutoScrollGeneration;
   const conferences = getSiteData().conferences;
   const blocks = conferences.map((conference) => {
     const images = Array.isArray(conference.images) ? conference.images : [];
@@ -230,6 +232,7 @@ function renderGallery() {
     let dragStartScroll = 0;
     track.addEventListener('pointerdown', (event) => {
       if (event.pointerType === 'mouse' && event.button !== 0) return;
+      if (event.target.closest('.gallery-image-button')) return;
       dragStartX = event.clientX;
       dragStartScroll = track.scrollLeft;
       track.setPointerCapture(event.pointerId);
@@ -249,13 +252,31 @@ function renderGallery() {
     });
     window.addEventListener('resize', handleScroll);
     updateGalleryDots(eventId);
-    const autoScrollTimer = window.setInterval(() => {
-      if (track.classList.contains('is-dragging') || track.scrollWidth <= track.clientWidth + 2) return;
-      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
-      track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + 1, behavior: 'auto' });
-      updateGalleryDots(eventId);
-    }, 35);
+    const advanceGallery = () => {
+      if (galleryGeneration !== window.__galleryAutoScrollGeneration) return;
+      if (!track.classList.contains('is-dragging') && track.scrollWidth > track.clientWidth + 2) {
+        const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 2;
+        track.classList.add('is-auto-scrolling');
+        track.style.scrollBehavior = 'auto';
+        track.scrollLeft = atEnd ? 0 : track.scrollLeft + 2;
+        updateGalleryDots(eventId);
+      }
+    };
+    const autoScrollTimer = window.setInterval(advanceGallery, 80);
+    let lastAutoScroll = 0;
+    const autoScroll = (timestamp) => {
+      if (galleryGeneration !== window.__galleryAutoScrollGeneration) return;
+      if (timestamp - lastAutoScroll >= 80) {
+        advanceGallery();
+        lastAutoScroll = timestamp;
+      }
+      const frame = window.requestAnimationFrame(autoScroll);
+      track.dataset.galleryAutoScrollFrame = String(frame);
+    };
+    const firstAutoScrollFrame = window.requestAnimationFrame(autoScroll);
+    track.dataset.galleryAutoScrollTimer = String(autoScrollTimer);
     window.__galleryAutoScrollTimers.push(autoScrollTimer);
+    track.dataset.galleryAutoScrollFrame = String(firstAutoScrollFrame);
   });
   document.querySelectorAll('[data-gallery-previous]').forEach((button) => button.addEventListener('click', () => moveGallery(button.dataset.galleryPrevious, -1)));
   document.querySelectorAll('[data-gallery-next]').forEach((button) => button.addEventListener('click', () => moveGallery(button.dataset.galleryNext, 1)));
@@ -266,7 +287,6 @@ function renderGallery() {
     lightbox.classList.add('is-open');
     document.body.classList.add('lightbox-open');
     lightbox.setAttribute('aria-hidden', 'false');
-    lightbox.focus?.();
   }));
   lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
   lightboxPrevious.addEventListener('click', () => { lightboxIndex -= 1; showLightboxImage(); });

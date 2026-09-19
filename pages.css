@@ -36,6 +36,7 @@
 .gallery-control:disabled,.gallery-control.is-hidden{opacity:.35;pointer-events:none}
 .gallery-grid{flex:1;display:flex;flex-wrap:nowrap;gap:18px;overflow-x:auto;margin-top:0;padding:8px 4px 8px 0;scroll-behavior:smooth;scroll-snap-type:x proximity;scrollbar-width:none;-ms-overflow-style:none;cursor:grab;touch-action:pan-y}
 .gallery-grid.is-dragging{cursor:grabbing;scroll-snap-type:none;scroll-behavior:auto}
+.gallery-grid.is-auto-scrolling{scroll-snap-type:none}
 .gallery-grid::-webkit-scrollbar{display:none}
 .gallery-grid figure{flex:0 0 220px;margin:0;border:0;background:transparent;scroll-snap-align:start}
 .gallery-image-button{display:block;width:100%;padding:0;border:0;background:#fff;cursor:zoom-in;border-radius:18px;overflow:hidden;box-shadow:0 14px 28px rgba(18,49,91,.08);transition:transform .2s ease,box-shadow .2s ease}
