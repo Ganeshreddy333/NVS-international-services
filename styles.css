@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
 
-/* Zylogic-inspired service website theme */
+/* NVS International Services website theme */
 :root{--ink:#12315b;--muted:#66758a;--paper:#f7f9fc;--white:#fff;--lime:#f58220;--line:#e3eaf2;--teal:#0d5aa7;--display:'Manrope',sans-serif;--mono:'DM Mono',monospace;--blue:#0d5aa7;--blue-dark:#082f63;--orange:#f58220;--orange-soft:#fff1e6;--shadow:0 16px 45px rgba(19,55,96,.1)}
 body{background:var(--paper);color:var(--ink);font-size:15px}
 h1,h2,h3{letter-spacing:-.025em}

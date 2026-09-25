@@ -9,23 +9,181 @@ const galleryUpload = document.querySelector('#gallery-upload');
 const galleryPreview = document.querySelector('#gallery-preview');
 const pageContentForm = document.querySelector('#page-content-form');
 const contentPage = document.querySelector('#content-page');
-const websiteInformationFields = document.querySelector('#website-information-fields');
 const partnershipForm = document.querySelector('#partnership-form');
 const partnershipList = document.querySelector('#partnership-list');
+const pageSectionsBody = document.querySelector('#page-sections-body');
 
-function renderWebsiteInformation() {
-  const information = getWebsiteInformation();
-  websiteInformationFields.innerHTML = Object.entries(information).map(([key, section]) => `<article class="website-information-item"><div class="website-information-heading"><strong>${escapeHtml(key.replace(/([A-Z])/g, ' $1'))}</strong><button class="button button-ghost website-information-save" type="button" data-information-key="${escapeHtml(key)}">Save</button></div><div class="field"><label for="information-title-${escapeHtml(key)}">Heading</label><input id="information-title-${escapeHtml(key)}" data-information-title="${escapeHtml(key)}" value="${escapeHtml(section.title || '')}"></div><div class="field"><label for="information-text-${escapeHtml(key)}">Text or list items</label><textarea id="information-text-${escapeHtml(key)}" data-information-text="${escapeHtml(key)}">${escapeHtml(section.text || section.items || '')}</textarea></div></article>`).join('');
-  websiteInformationFields.querySelectorAll('.website-information-save').forEach((button) => button.addEventListener('click', () => {
-    const key = button.dataset.informationKey;
-    data.websiteInformation = data.websiteInformation || {};
-    data.websiteInformation[key] = {
-      title: document.querySelector(`[data-information-title="${CSS.escape(key)}"]`).value,
-      text: document.querySelector(`[data-information-text="${CSS.escape(key)}"]`).value
-    };
-    saveSiteData(data);
-    showMessage(`${key} information saved.`);
-  }));
+const pageEditorKinds = { about: 'blocks', sponsors: 'blocks', general: 'accordion', home: 'home' };
+
+function makeSectionId() {
+  return `sec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function ensurePageData(pageKey) {
+  data.pages = data.pages || {};
+  if (!data.pages[pageKey]) {
+    data.pages[pageKey] = structuredClone(defaultSiteData.pages?.[pageKey]) || { kind: pageEditorKinds[pageKey], sections: [] };
+  }
+  return data.pages[pageKey];
+}
+
+function blockCardSkeleton(index, total) {
+  return `<article class="page-section-item" data-index="${index}">
+    <div class="page-section-head"><strong>Section ${index + 1}</strong><div class="event-actions"><button type="button" data-move-up ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-move-down ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-remove>Delete</button></div></div>
+    <div class="field"><label>Style</label><select data-field="variant"><option value="">Standard</option><option value="opening">Opening</option><option value="vision">Highlight</option><option value="closing">Closing</option></select></div>
+    <div class="field"><label>Kicker / label</label><input data-field="kicker"></div>
+    <div class="field"><label>Heading</label><input data-field="heading"></div>
+    <div class="field"><label>Body (leave a blank line between paragraphs, wrap **text** for bold)</label><textarea data-field="body" rows="4"></textarea></div>
+    <div class="field"><label>List style</label><select data-field="listStyle"><option value="none">No list</option><option value="topic">Bullet list</option><option value="definition">Term + description</option></select></div>
+    <div class="field"><label>List items (one per line; for Term + description use "Term :: description")</label><textarea data-field="listItems" rows="4"></textarea></div>
+    <div class="field"><label>Extra text after the list (optional)</label><textarea data-field="bodyAfter" rows="2"></textarea></div>
+  </article>`;
+}
+
+function accordionCardSkeleton(index, total) {
+  return `<article class="page-section-item" data-index="${index}">
+    <div class="page-section-head"><strong>Item ${index + 1}</strong><div class="event-actions"><button type="button" data-move-up ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-move-down ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-remove>Delete</button></div></div>
+    <div class="field"><label>Title</label><input data-field="heading"></div>
+    <div class="field"><label>Content — start a line with # for a sub-heading, - for a bullet point, leave a blank line between paragraphs, and wrap **text** for bold</label><textarea data-field="body" rows="10"></textarea></div>
+  </article>`;
+}
+
+function homeCardSkeleton(index, total) {
+  return `<article class="page-section-item" data-index="${index}">
+    <div class="page-section-head"><strong>Card ${index + 1}</strong><div class="event-actions"><button type="button" data-move-up ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-move-down ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-remove>Delete</button></div></div>
+    <div class="field"><label>Number</label><input data-field="number"></div>
+    <div class="field"><label>Title</label><input data-field="title"></div>
+    <div class="field"><label>Description</label><input data-field="text"></div>
+    <div class="field"><label>Link (page file)</label><input data-field="href"></div>
+  </article>`;
+}
+
+function fillSectionCard(card, kind, item) {
+  card.dataset.id = item.id || '';
+  const set = (field, value) => { const el = card.querySelector(`[data-field="${field}"]`); if (el) el.value = value == null ? '' : value; };
+  if (kind === 'accordion') {
+    set('heading', item.heading);
+    set('body', item.body);
+    return;
+  }
+  if (kind === 'home') {
+    set('number', item.number);
+    set('title', item.title);
+    set('text', item.text);
+    set('href', item.href);
+    return;
+  }
+  set('variant', item.variant || '');
+  set('kicker', item.kicker);
+  set('heading', item.heading);
+  set('body', item.body);
+  set('listStyle', item.listStyle || 'none');
+  set('listItems', Array.isArray(item.listItems) ? item.listItems.join('\n') : (item.listItems || ''));
+  set('bodyAfter', item.bodyAfter);
+  if (item.signoff || item.button) {
+    const extra = document.createElement('div');
+    extra.className = 'page-section-extra';
+    let html = '';
+    if (item.signoff) html += `<div class="field"><label>Sign-off — bold line</label><input data-field="signoff-strong"></div><div class="field"><label>Sign-off — middle line</label><input data-field="signoff-span"></div><div class="field"><label>Sign-off — closing line</label><input data-field="signoff-b"></div>`;
+    if (item.button) html += `<div class="field"><label>Button label</label><input data-field="button-label"></div><div class="field"><label>Button link</label><input data-field="button-href"></div>`;
+    extra.innerHTML = html;
+    card.append(extra);
+    if (item.signoff) {
+      card.querySelector('[data-field="signoff-strong"]').value = item.signoff.strong || '';
+      card.querySelector('[data-field="signoff-span"]').value = item.signoff.span || '';
+      card.querySelector('[data-field="signoff-b"]').value = item.signoff.b || '';
+    }
+    if (item.button) {
+      card.querySelector('[data-field="button-label"]').value = item.button.label || '';
+      card.querySelector('[data-field="button-href"]').value = item.button.href || '';
+    }
+  }
+}
+
+function collectPageItems(kind) {
+  return [...pageSectionsBody.querySelectorAll('.page-section-item')].map((card) => {
+    const get = (field) => card.querySelector(`[data-field="${field}"]`);
+    const value = (field) => (get(field) ? get(field).value : '');
+    if (kind === 'accordion') return { id: card.dataset.id || makeSectionId(), heading: value('heading'), body: value('body') };
+    if (kind === 'home') return { id: card.dataset.id || makeSectionId(), number: value('number'), title: value('title'), text: value('text'), href: value('href') };
+    const block = { id: card.dataset.id || makeSectionId(), variant: value('variant'), kicker: value('kicker'), heading: value('heading'), body: value('body'), listStyle: value('listStyle'), listItems: value('listItems').split('\n').map((line) => line.trim()).filter(Boolean), bodyAfter: value('bodyAfter') };
+    if (get('signoff-strong')) block.signoff = { strong: value('signoff-strong'), span: value('signoff-span'), b: value('signoff-b') };
+    if (get('button-label')) block.button = { label: value('button-label'), href: value('button-href') };
+    return block;
+  });
+}
+
+function getPageItemsRef(page, kind) {
+  if (kind === 'home') { page.directory = page.directory || []; return page.directory; }
+  page.sections = page.sections || [];
+  return page.sections;
+}
+
+function newPageItem(kind) {
+  if (kind === 'accordion') return { id: makeSectionId(), heading: '', body: '' };
+  if (kind === 'home') return { id: makeSectionId(), number: '', title: '', text: '', href: '' };
+  return { id: makeSectionId(), variant: '', kicker: '', heading: '', body: '', listStyle: 'none', listItems: [], bodyAfter: '' };
+}
+
+function persistPageItems(pageKey, kind, items) {
+  const page = ensurePageData(pageKey);
+  if (kind === 'home') page.directory = items;
+  else page.sections = items;
+  saveSiteData(data);
+}
+
+function renderPageSections() {
+  const pageKey = contentPage.value;
+  const kind = pageEditorKinds[pageKey];
+  const notes = {
+    conferences: 'The conference cards on this page are managed in the Conferences tab.',
+    gallery: 'Gallery images are managed in the Media / Gallery tab.',
+    contact: 'The contact form and details are managed in the Website Information tab.'
+  };
+  if (!kind) {
+    pageSectionsBody.innerHTML = `<p class="muted">${escapeHtml(notes[pageKey] || 'This page only has the label, heading and introduction above.')}</p>`;
+    return;
+  }
+  const page = ensurePageData(pageKey);
+  const items = getPageItemsRef(page, kind);
+  const labels = { blocks: 'content section', accordion: 'item', home: 'card' };
+  const skeletonFor = { blocks: blockCardSkeleton, accordion: accordionCardSkeleton, home: homeCardSkeleton }[kind];
+  pageSectionsBody.innerHTML = `<div class="page-sections-head"><h2>Page sections</h2><button class="button button-ghost" type="button" id="add-page-section">Add ${labels[kind]}</button></div><div id="page-sections-list">${items.map((item, index) => skeletonFor(index, items.length)).join('') || `<p class="muted">No ${labels[kind]}s yet. Use "Add ${labels[kind]}".</p>`}</div><button class="button button-lime" type="button" id="save-page-sections">Save page sections <span>↗</span></button>`;
+  const cards = [...pageSectionsBody.querySelectorAll('.page-section-item')];
+  cards.forEach((card, index) => fillSectionCard(card, kind, items[index]));
+
+  cards.forEach((card, index) => {
+    card.querySelector('[data-move-up]')?.addEventListener('click', () => {
+      const current = collectPageItems(kind);
+      [current[index - 1], current[index]] = [current[index], current[index - 1]];
+      persistPageItems(pageKey, kind, current);
+      renderPageSections();
+    });
+    card.querySelector('[data-move-down]')?.addEventListener('click', () => {
+      const current = collectPageItems(kind);
+      [current[index + 1], current[index]] = [current[index], current[index + 1]];
+      persistPageItems(pageKey, kind, current);
+      renderPageSections();
+    });
+    card.querySelector('[data-remove]')?.addEventListener('click', () => {
+      const current = collectPageItems(kind);
+      current.splice(index, 1);
+      persistPageItems(pageKey, kind, current);
+      renderPageSections();
+      showMessage('Section removed.');
+    });
+  });
+
+  pageSectionsBody.querySelector('#add-page-section')?.addEventListener('click', () => {
+    const current = collectPageItems(kind);
+    current.push(newPageItem(kind));
+    persistPageItems(pageKey, kind, current);
+    renderPageSections();
+  });
+  pageSectionsBody.querySelector('#save-page-sections')?.addEventListener('click', () => {
+    persistPageItems(pageKey, kind, collectPageItems(kind));
+    showMessage('Page sections saved.');
+  });
 }
 
 function bindAdminViews() {
@@ -245,7 +403,7 @@ conferenceForm.addEventListener('submit', (event) => {
 
 document.querySelector('#cancel-edit').addEventListener('click', resetConferenceForm);
 document.querySelector('#partnership-clear').addEventListener('click', resetPartnershipForm);
-contentPage.addEventListener('change', fillPageContentForm);
+contentPage.addEventListener('change', () => { fillPageContentForm(); renderPageSections(); });
 galleryEvent.addEventListener('change', renderGalleryPreview);
 galleryUpload.addEventListener('change', (event) => {
   const conference = data.conferences.find((item) => item.id === galleryEvent.value);
@@ -284,7 +442,7 @@ galleryUpload.addEventListener('change', (event) => {
 
 fillCompanyForm();
 fillPageContentForm();
-renderWebsiteInformation();
+renderPageSections();
 renderEvents();
 renderInquiries();
 renderPartnerships();

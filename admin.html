@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Private Admin | NVS International Services</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260919-zylogic">
-  <link rel="stylesheet" href="pages.css?v=20260919-reference2">
+  <link rel="stylesheet" href="styles.css?v=20260926-general">
+  <link rel="stylesheet" href="pages.css?v=20260926-redesign">
 </head>
 <body>
   <header class="site-header">
@@ -51,12 +53,15 @@
         <h2>Website Page Content</h2>
         <p class="muted">Edit the main heading and introduction for each website page. Existing wording is loaded automatically and changes are saved in this browser.</p>
         <form id="page-content-form" class="page-content-form">
-          <div class="field"><label for="content-page">Choose page</label><select id="content-page"><option value="home">Home</option><option value="about">About Us</option><option value="conferences">Conferences</option><option value="sponsors">Sponsors</option><option value="exhibitors">Exhibitors</option><option value="gallery">Gallery</option><option value="general">General Information</option><option value="contact">Contact Us</option></select></div>
+          <div class="field"><label for="content-page">Choose page</label><select id="content-page"><option value="home">Home</option><option value="about">About Us</option><option value="conferences">Conferences</option><option value="sponsors">Sponsor &amp; Exhibit</option><option value="gallery">Gallery</option><option value="general">General Information</option><option value="contact">Contact Us</option></select></div>
           <div class="field"><label for="content-eyebrow">Page label</label><input id="content-eyebrow" required></div>
           <div class="field"><label for="content-title">Main heading</label><input id="content-title" required></div>
           <div class="field"><label for="content-text">Introduction text</label><textarea id="content-text" required></textarea></div>
           <button class="button button-lime" type="submit">Save Page Content <span>↗</span></button>
         </form>
+      </section>
+      <section class="admin-card admin-page-sections" id="page-sections">
+        <div id="page-sections-body"></div>
       </section>
       </div>
       <div class="admin-view" id="information-view">
@@ -71,7 +76,6 @@
             <button class="button button-lime" type="submit">Save Company Details <span>↗</span></button>
           </form>
         </section>
-        <section class="admin-card website-information-manager"><h2>Whole Website Information</h2><p class="muted">Edit each information group separately. Line-separated items are displayed as separate list entries when used on the website.</p><div id="website-information-fields"></div></section>
       </div>
       <div class="admin-view" id="conference-view">
       <div class="admin-grid">
@@ -138,8 +142,8 @@
       <div class="admin-view" id="settings-view"><section class="admin-card"><h2>Settings</h2><p class="muted">Website data is stored in this browser. Use the existing admin controls to update content, conferences, media, and enquiries.</p><button class="button button-ghost admin-logout" id="settings-logout" type="button">Sign Out</button></section></div>
     </main>
   </div>
-  <script src="site.js?v=20260919-admin-gallery3"></script>
+  <script src="site.js?v=20260926-links"></script>
   <script src="auth.js?v=20260919-partners"></script>
-  <script src="admin.js?v=20260919-admin-gallery3"></script>
+  <script src="admin.js?v=20260926-general"></script>
 </body>
 </html>
