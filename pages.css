@@ -351,3 +351,67 @@ body{background:#f4f8fd;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .site-footer{background:linear-gradient(180deg,#0f2748,#0a1c33);border-top:3px solid transparent;border-image:linear-gradient(90deg,var(--nvs-accent),var(--nvs-primary-2)) 1}
 .footer-links a:hover,.footer-contact a:hover{color:var(--nvs-accent-2)}
 .footer-company strong{color:var(--nvs-accent-2);border-left-color:var(--nvs-accent-2)}
+
+/* ============================================================
+   ADMIN PANEL — CLEAN & NEAT LAYOUT (2026)
+   Styling only; ties the admin to the site design tokens.
+   ============================================================ */
+
+/* Canvas + login */
+.admin-login{background:radial-gradient(700px 460px at 80% -10%,rgba(18,196,139,.20),transparent 60%),linear-gradient(140deg,#0f2748,#0a1c33)}
+.login-panel{background:var(--nvs-surface);border-radius:var(--nvs-radius);box-shadow:var(--nvs-shadow-lg);padding:44px}
+.login-panel h1{font-size:clamp(38px,5vw,60px);margin:26px 0 16px}
+.login-panel h1 em,.admin-heading h1 em{color:var(--nvs-accent)}
+.admin-page{background:var(--nvs-soft);padding:30px 2.4vw 90px}
+
+/* Heading — tighter, clearer hierarchy */
+.admin-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:24px}
+.admin-heading h1{font-size:clamp(30px,3.4vw,46px);color:var(--nvs-primary);line-height:1.05}
+.admin-heading-actions{align-items:center;gap:18px}
+.admin-heading-actions p{color:var(--nvs-muted);font-size:13px;max-width:360px}
+
+/* Tabs — clean pill row */
+.admin-tabs{gap:6px;padding:10px 2.4vw;background:var(--nvs-surface);border-bottom:var(--nvs-border);box-shadow:0 1px 0 rgba(15,39,72,.04)}
+.admin-tabs a{padding:10px 20px;color:var(--nvs-muted);font-size:13px;font-weight:700;border-radius:999px;border:1px solid transparent;transition:background .18s ease,color .18s ease,border-color .18s ease}
+.admin-tabs a:hover{background:var(--nvs-soft);color:var(--nvs-primary)}
+.admin-tabs a.active{background:linear-gradient(120deg,var(--nvs-accent),var(--nvs-accent-2));color:#fff;font-weight:800;box-shadow:0 8px 18px -8px rgba(14,163,113,.55);border-color:transparent;border-bottom:1px solid transparent}
+
+/* Cards — consistent radius / shadow / spacing, clear titles */
+.admin-card{background:var(--nvs-surface);border:var(--nvs-border);border-radius:var(--nvs-radius);box-shadow:var(--nvs-shadow);padding:28px}
+.admin-card h2{color:var(--nvs-primary);font-size:22px;padding-bottom:14px;margin-bottom:20px;border-bottom:1px solid rgba(15,39,72,.08)}
+.admin-card h3{color:var(--nvs-primary);font-size:16px;margin:26px 0 14px}
+.admin-card .muted,.muted{color:var(--nvs-muted)}
+.admin-page-content,.admin-page-sections,.website-information-manager{margin-bottom:22px}
+
+/* Form fields — neat, aligned, clear focus */
+.field{margin-bottom:16px}
+.field label{color:var(--nvs-primary-2);font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.field input,.field textarea,.field select{border:1px solid #d5dee8;border-radius:var(--nvs-radius-sm);background:#fbfdff;padding:12px 14px;transition:border-color .18s ease,box-shadow .18s ease}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--nvs-accent);box-shadow:0 0 0 3px rgba(14,163,113,.15);background:#fff}
+.field textarea{min-height:104px;resize:vertical}
+
+/* List rows — events, page sections, website info, partnerships */
+.admin-event,.page-section-item,.website-information-item,.inquiry,.partnership-item{background:#fbfdff;border:1px solid #e3eaf2;border-radius:var(--nvs-radius-sm);padding:18px}
+.admin-event-list{gap:14px}
+.admin-event strong,.inquiry strong{color:var(--nvs-primary)}
+.admin-event button,.page-section-item .event-actions button{border:1px solid #cdd8e5;border-radius:8px;background:#fff;color:var(--nvs-primary);padding:7px 12px;font-weight:600;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.admin-event button:hover,.page-section-item .event-actions button:hover{background:var(--nvs-soft);border-color:var(--nvs-primary-2)}
+.admin-event button.delete,.page-section-item .event-actions .delete,.inquiry button{border-color:#e6bcbc;color:#b4331f}
+.admin-event button.delete:hover,.inquiry button:hover{background:#fdeeee;border-color:#d98a8a}
+
+/* Upload box + gallery preview */
+.upload-box{border:1.5px dashed #b3c2d4;border-radius:var(--nvs-radius-sm);background:#fbfdff;padding:22px}
+.gallery-preview button{border-radius:8px}
+
+/* Buttons inside admin — clear ghost/clear styling */
+.admin-logout,.clear-button,.website-information-heading .button{border-radius:999px;color:var(--nvs-primary);border:1px solid #cdd8e5;background:#fff}
+.admin-logout:hover,.clear-button:hover{background:var(--nvs-soft);border-color:var(--nvs-primary-2)}
+
+/* Side panel — align to tokens */
+.admin-side-panel{border-radius:var(--nvs-radius);border:var(--nvs-border);box-shadow:var(--nvs-shadow)}
+
+/* Message toast — neat, only when shown (keeps display logic intact) */
+.admin-message{border-radius:var(--nvs-radius-sm);background:#e7f8f0;border:1px solid #b6e6d2;color:#0a6b4f;padding:14px 16px;font-weight:600}
+
+/* Section-manager head row */
+.page-sections-head h2,.website-information-heading{border-bottom:0;padding-bottom:0}
