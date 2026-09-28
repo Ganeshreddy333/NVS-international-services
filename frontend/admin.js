@@ -238,19 +238,41 @@ function fillPageContentForm() {
   document.querySelector('#content-text').value = content.text || '';
 }
 
+function formatInquiryDate(inquiry) {
+  if (inquiry.date) return inquiry.date;
+  if (inquiry.created_at) {
+    const parsed = new Date(inquiry.created_at);
+    return Number.isNaN(parsed.getTime()) ? String(inquiry.created_at) : parsed.toLocaleString();
+  }
+  return '';
+}
+
 function renderInquiries() {
-  const inquiries = data.inquiries || [];
   const card = document.querySelector('#inquiry-manager') || document.createElement('section');
   card.id = 'inquiry-manager';
   card.className = 'admin-card inquiry-manager';
-  card.innerHTML = `<h2>Contact Enquiries</h2>${inquiries.length ? `<div class="inquiry-list">${inquiries.map((inquiry) => `<article class="inquiry"><div><strong>${escapeHtml(inquiry.subject)}</strong><small>${escapeHtml(inquiry.name)} · ${escapeHtml(inquiry.email)} · ${escapeHtml(inquiry.phone || 'No phone provided')} · ${escapeHtml(inquiry.date)}</small></div><p>${escapeHtml(inquiry.message)}</p><button type="button" data-inquiry-delete="${inquiry.id}">Delete</button></article>`).join('')}</div>` : '<p class="muted">No contact enquiries yet.</p>'}`;
   if (!card.parentElement) document.querySelector('.admin-page').append(card);
-  card.querySelectorAll('[data-inquiry-delete]').forEach((button) => button.addEventListener('click', () => {
-    data.inquiries = data.inquiries.filter((inquiry) => String(inquiry.id) !== button.dataset.inquiryDelete);
-    saveSiteData(data);
-    renderInquiries();
-    showMessage('Enquiry deleted.');
-  }));
+
+  const paint = (inquiries, fromServer) => {
+    card.innerHTML = `<h2>Contact Enquiries</h2>${inquiries.length ? `<div class="inquiry-list">${inquiries.map((inquiry) => `<article class="inquiry"><div><strong>${escapeHtml(inquiry.subject)}</strong><small>${escapeHtml(inquiry.name)} · ${escapeHtml(inquiry.email)} · ${escapeHtml(inquiry.phone || 'No phone provided')} · ${escapeHtml(formatInquiryDate(inquiry))}</small></div><p>${escapeHtml(inquiry.message)}</p><button type="button" data-inquiry-delete="${inquiry.id}">Delete</button></article>`).join('')}</div>` : '<p class="muted">No contact enquiries yet.</p>'}`;
+    card.querySelectorAll('[data-inquiry-delete]').forEach((button) => button.addEventListener('click', () => {
+      const id = button.dataset.inquiryDelete;
+      if (fromServer && window.NVS_API && NVS_API.deleteInquiry) {
+        NVS_API.deleteInquiry(id).then(() => { renderInquiries(); showMessage('Enquiry deleted.'); }).catch(() => showMessage('Could not delete enquiry on the server.'));
+      } else {
+        data.inquiries = (data.inquiries || []).filter((inquiry) => String(inquiry.id) !== id);
+        saveSiteData(data);
+        renderInquiries();
+        showMessage('Enquiry deleted.');
+      }
+    }));
+  };
+
+  if (window.NVS_API && NVS_API.listInquiries && NVS_API.hasToken()) {
+    NVS_API.listInquiries().then((rows) => paint(rows, true)).catch(() => paint(data.inquiries || [], false));
+  } else {
+    paint(data.inquiries || [], false);
+  }
 }
 
 function showMessage(text) {
@@ -447,3 +469,6 @@ renderEvents();
 renderInquiries();
 renderPartnerships();
 bindAdminViews();
+
+// After a successful login the API token exists, so reload enquiries from the server.
+window.addEventListener('admin-authenticated', () => renderInquiries());

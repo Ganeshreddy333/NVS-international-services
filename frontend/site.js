@@ -1421,10 +1421,18 @@ function getPartnerships() {
 
 function saveSiteData(data) {
   localStorage.setItem('nvs-site-data', JSON.stringify(data));
+  // When an admin is signed in, persist to the backend so every visitor sees it.
+  if (window.NVS_API && NVS_API.hasToken && NVS_API.hasToken()) {
+    NVS_API.saveContent(data).catch(() => {});
+  }
 }
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+}
+
+function stripLabelNumber(value = '') {
+  return String(value).replace(/^\s*\d+\s*\/\s*/, '');
 }
 
 function mergePages(basePages, savedPages) {
@@ -1466,7 +1474,7 @@ function renderList(listStyle, items = []) {
 function renderBlock(block = {}) {
   const variantClass = { opening: ' about-opening', vision: ' about-vision', closing: ' about-closing' }[block.variant] || '';
   let html = `<article class="about-block${variantClass}">`;
-  if (block.kicker) html += `<p class="about-kicker">${renderInline(block.kicker)}</p>`;
+  if (block.kicker) html += `<p class="about-kicker">${renderInline(stripLabelNumber(block.kicker))}</p>`;
   if (block.heading) html += `<h2>${renderInline(block.heading)}</h2>`;
   html += renderParagraphs(block.body);
   html += renderList(block.listStyle, block.listItems);
@@ -1523,7 +1531,7 @@ function renderHeader(activePage = '') {
 }
 
 function renderFooter() {
-  return `<footer class="site-footer"><div class="footer-columns"><div class="footer-company"><img class="footer-logo" src="logo.svg" alt="NVS International Services"><p>Empowering Scientific Innovation & Global Collaboration</p><strong>ORGANIZED BY NVS INTERNATIONAL SERVICES</strong></div><div class="footer-links"><h3>QUICK LINKS</h3><a href="about.html">About Us</a><a href="conferences.html">Upcoming Conferences</a><a href="sponsors.html">Sponsors & Exhibitors</a><a href="contact.html">Contact Us</a></div><div class="footer-contact"><h3>CONTACT INFO</h3><a href="mailto:${escapeHtml(getSiteData().contact.email)}">${escapeHtml(getSiteData().contact.email)}</a><a href="tel:${escapeHtml(getSiteData().contact.phone)}">${escapeHtml(getSiteData().contact.phone)}</a><span>${escapeHtml(getSiteData().contact.location)}</span></div></div><div class="footer-bottom"><span>© 2026 NVS International Services. All rights reserved.</span><span>NVS INTERNATIONAL SERVICES</span></div></footer>`;
+  return `<footer class="site-footer"><div class="footer-columns"><div class="footer-company"><img class="footer-logo" src="logo.svg" alt="NVS International Services"><p>Empowering Scientific Innovation & Global Collaboration</p></div><div class="footer-links"><h3>QUICK LINKS</h3><a href="index.html">Home</a><a href="about.html">About Us</a><a href="conferences.html">Conferences</a><a href="sponsors.html">Sponsors & Exhibitors</a><a href="gallery.html">Gallery</a><a href="general-information.html">General Information</a><a href="contact.html">Contact Us</a></div><div class="footer-contact"><h3>CONTACT INFO</h3><a href="mailto:${escapeHtml(getSiteData().contact.email)}">${escapeHtml(getSiteData().contact.email)}</a><a href="tel:${escapeHtml(getSiteData().contact.phone)}">${escapeHtml(getSiteData().contact.phone)}</a><span>${escapeHtml(getSiteData().contact.location)}</span></div></div><div class="footer-bottom"><span>© 2026 NVS International Services. All rights reserved.</span><span>NVS INTERNATIONAL SERVICES</span></div></footer>`;
 }
 
 function renderShell(page, activePage, content) {
@@ -1557,7 +1565,7 @@ function getPageContent(pageKey, fallback = {}) {
 
 function pageIntro(pageKey, number, eyebrow, title, text) {
   const content = getPageContent(pageKey, { eyebrow, title, text });
-  return `<section class="page-hero section-dark"><div class="section-label light-label">${number} / ${escapeHtml(content.eyebrow)}</div><div class="page-hero-copy"><h1>${escapeHtml(content.title)}</h1><p>${escapeHtml(content.text)}</p></div></section>`;
+  return `<section class="page-hero section-dark"><div class="page-hero-copy"><h1>${escapeHtml(content.title)}</h1><p>${escapeHtml(content.text)}</p></div></section>`;
 }
 
 function renderGallery() {
@@ -1768,12 +1776,21 @@ function startPage() {
     document.querySelector('#contact-form').addEventListener('submit', (event) => {
       event.preventDefault();
       const form = new FormData(event.currentTarget);
-      const updatedData = getSiteData();
-      updatedData.inquiries = updatedData.inquiries || [];
-      updatedData.inquiries.unshift({ id: Date.now(), name: form.get('name'), email: form.get('email'), phone: form.get('phone'), subject: form.get('subject'), message: form.get('message'), date: new Date().toLocaleString() });
-      saveSiteData(updatedData);
-      event.currentTarget.reset();
-      document.querySelector('.form-status').textContent = 'Thank you. Your enquiry has been received.';
+      const formElement = event.currentTarget;
+      const inquiry = { name: form.get('name'), email: form.get('email'), phone: form.get('phone'), subject: form.get('subject'), message: form.get('message') };
+      const finish = () => { formElement.reset(); document.querySelector('.form-status').textContent = 'Thank you. Your enquiry has been received.'; };
+      const saveLocally = () => {
+        const updatedData = getSiteData();
+        updatedData.inquiries = updatedData.inquiries || [];
+        updatedData.inquiries.unshift({ id: Date.now(), ...inquiry, date: new Date().toLocaleString() });
+        localStorage.setItem('nvs-site-data', JSON.stringify(updatedData));
+      };
+      if (window.NVS_API && NVS_API.postInquiry) {
+        NVS_API.postInquiry(inquiry).then(finish).catch(() => { saveLocally(); finish(); });
+      } else {
+        saveLocally();
+        finish();
+      }
     });
   }
 }
@@ -1796,4 +1813,7 @@ function generalDetails() {
   return renderAccordion(getPageConfig('general').sections);
 }
 
-if (document.body.dataset.page) startPage();
+if (document.body.dataset.page) {
+  if (window.NVS_API && NVS_API.bootstrap) NVS_API.bootstrap().finally(startPage);
+  else startPage();
+}

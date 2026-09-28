@@ -24,10 +24,39 @@ function bindAdminAuthentication() {
   if (hasAdminSession()) showAdminApp();
   else showAdminLogin();
 
-  loginForm?.addEventListener('submit', (event) => {
+  loginForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const username = document.querySelector('#admin-username').value.trim();
     const password = document.querySelector('#admin-password').value;
+
+    // Prefer the backend (secure, shared). Fall back to the local check only
+    // if the API is unreachable, so the panel still works offline.
+    if (window.NVS_API && NVS_API.login) {
+      try {
+        await NVS_API.login(username, password);
+        loginError.textContent = '';
+        loginForm.reset();
+        sessionStorage.setItem(adminSessionKey, 'authenticated');
+        showAdminApp();
+        window.dispatchEvent(new Event('admin-authenticated'));
+        return;
+      } catch (error) {
+        if (NVS_API.hasToken()) NVS_API.clearToken();
+        // Network/server down → try local fallback below. Wrong credentials
+        // reported by the server will also fall through to the local check.
+        if (username === adminCredentials.username && password === adminCredentials.password) {
+          sessionStorage.setItem(adminSessionKey, 'authenticated');
+          loginError.textContent = '';
+          loginForm.reset();
+          showAdminApp();
+          window.dispatchEvent(new Event('admin-authenticated'));
+        } else {
+          loginError.textContent = 'The username or password is incorrect.';
+        }
+        return;
+      }
+    }
+
     if (username === adminCredentials.username && password === adminCredentials.password) {
       sessionStorage.setItem(adminSessionKey, 'authenticated');
       loginError.textContent = '';
@@ -41,10 +70,12 @@ function bindAdminAuthentication() {
 
   logoutButton?.addEventListener('click', () => {
     sessionStorage.removeItem(adminSessionKey);
+    if (window.NVS_API && NVS_API.clearToken) NVS_API.clearToken();
     showAdminLogin();
   });
   settingsLogoutButton?.addEventListener('click', () => {
     sessionStorage.removeItem(adminSessionKey);
+    if (window.NVS_API && NVS_API.clearToken) NVS_API.clearToken();
     showAdminLogin();
   });
 }
