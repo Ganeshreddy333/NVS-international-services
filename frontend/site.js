@@ -19,6 +19,8 @@ const defaultSiteData = {
     contact: { eyebrow: 'CONTACT', title: 'Get in Touch', text: 'Connect With NVS International Services' }
   },
   websiteInformation: {
+    whatsappNumber: '9391720171',
+    linkedinUrl: '',
     about: { title: 'About NVS International Services', text: 'Connecting scientific communities through knowledge, research and collaboration.' },
     purpose: { title: 'Our Purpose', text: 'We create professional and accessible platforms for the global scientific community to communicate research, exchange knowledge and build opportunities for collaboration.' },
     expertise: { title: 'Connecting Science, Research & Industry', items: 'International Conferences & Scientific Meetings\nAcademic & Research Events\nWorkshops, Seminars & Symposiums\nProfessional Networking & Knowledge Exchange\nConference Promotion & Global Outreach\nSpeaker & Participant Engagement\nAcademic Collaboration & Research Networking' },
@@ -1531,11 +1533,64 @@ function renderHeader(activePage = '') {
 }
 
 function renderFooter() {
-  return `<footer class="site-footer"><div class="footer-columns"><div class="footer-company"><img class="footer-logo" src="logo.svg" alt="NVS International Services"><p>Empowering Scientific Innovation & Global Collaboration</p></div><div class="footer-links"><h3>QUICK LINKS</h3><a href="index.html">Home</a><a href="about.html">About Us</a><a href="conferences.html">Conferences</a><a href="sponsors.html">Sponsors & Exhibitors</a><a href="gallery.html">Gallery</a><a href="general-information.html">General Information</a><a href="contact.html">Contact Us</a></div><div class="footer-contact"><h3>CONTACT INFO</h3><a href="mailto:${escapeHtml(getSiteData().contact.email)}">${escapeHtml(getSiteData().contact.email)}</a><a href="tel:${escapeHtml(getSiteData().contact.phone)}">${escapeHtml(getSiteData().contact.phone)}</a><span>${escapeHtml(getSiteData().contact.location)}</span></div></div><div class="footer-bottom"><span>© 2026 NVS International Services. All rights reserved.</span><span>NVS INTERNATIONAL SERVICES</span></div></footer>`;
+  const data = getSiteData();
+  const linkedinUrl = String(data.websiteInformation?.linkedinUrl || '').trim();
+  const linkedinLink = /^https?:\/\//i.test(linkedinUrl) ? `<a class="linkedin-page-link" href="${escapeHtml(linkedinUrl)}" target="_blank" rel="noopener noreferrer">LinkedIn</a>` : '';
+  return `<footer class="site-footer"><div class="footer-columns"><div class="footer-company"><img class="footer-logo" src="logo.svg" alt="NVS International Services"><p>Empowering Scientific Innovation & Global Collaboration</p></div><div class="footer-links"><h3>QUICK LINKS</h3><a href="index.html">Home</a><a href="about.html">About Us</a><a href="conferences.html">Conferences</a><a href="sponsors.html">Sponsors & Exhibitors</a><a href="gallery.html">Gallery</a><a href="general-information.html">General Information</a><a href="contact.html">Contact Us</a></div><div class="footer-contact"><h3>CONTACT INFO</h3><a href="mailto:${escapeHtml(data.contact.email)}">${escapeHtml(data.contact.email)}</a><a href="tel:${escapeHtml(data.contact.phone)}">${escapeHtml(data.contact.phone)}</a><span>${escapeHtml(data.contact.location)}</span>${linkedinLink}</div></div><div class="footer-bottom"><span>© 2026 NVS International Services. All rights reserved.</span><span>NVS INTERNATIONAL SERVICES</span></div></footer>`;
+}
+
+function mountLinkedInLink() {
+  const information = getSiteData().websiteInformation || {};
+  const url = String(information.linkedinUrl || '').trim();
+  const contact = document.querySelector('.footer-contact');
+  const validUrl = /^https?:\/\//i.test(url);
+  contact?.querySelector('.linkedin-page-link')?.remove();
+  document.querySelector('.linkedin-float')?.remove();
+  if (!validUrl) return;
+  if (contact) {
+    const link = document.createElement('a');
+    link.className = 'linkedin-page-link';
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'LinkedIn';
+    contact.appendChild(link);
+  }
+  const button = document.createElement('a');
+  button.className = 'linkedin-float';
+  button.href = url;
+  button.target = '_blank';
+  button.rel = 'noopener noreferrer';
+  button.setAttribute('aria-label', 'Visit us on LinkedIn');
+  button.title = 'Visit us on LinkedIn';
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14ZM8.34 10H5.67v8h2.67v-8ZM7 5.9a1.55 1.55 0 1 0 0 3.1 1.55 1.55 0 0 0 0-3.1ZM18.34 13.42c0-2.4-1.28-3.52-2.98-3.52a2.57 2.57 0 0 0-2.31 1.27V10h-2.66v8h2.66v-4.2c0-1.1.21-2.17 1.58-2.17 1.35 0 1.37 1.27 1.37 2.24V18h2.66l-.32-4.58Z"/></svg>';
+  document.body.appendChild(button);
+}
+
+function mountWhatsAppButton() {
+  const information = getSiteData().websiteInformation || {};
+  const rawNumber = String(information.whatsappNumber || '9391720171');
+  let number = rawNumber.replace(/\D/g, '');
+  if (number.length === 10) number = `91${number}`;
+  if (!number) return;
+  let button = document.querySelector('.whatsapp-float');
+  if (!button) {
+    button = document.createElement('a');
+    button.className = 'whatsapp-float';
+    button.target = '_blank';
+    button.rel = 'noopener noreferrer';
+    button.setAttribute('aria-label', 'Chat with us on WhatsApp');
+    button.title = 'Chat with us on WhatsApp';
+    button.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M16.04 3C8.9 3 3.1 8.75 3.1 15.83c0 2.27.6 4.49 1.74 6.45L3 29l6.92-1.8a13.1 13.1 0 0 0 6.12 1.52h.01c7.13 0 12.94-5.76 12.94-12.84A12.75 12.75 0 0 0 25.2 6.8 12.88 12.88 0 0 0 16.04 3Zm0 23.55c-1.9 0-3.77-.5-5.4-1.45l-.39-.23-4.1 1.07 1.1-3.97-.25-.4a10.58 10.58 0 0 1-1.64-5.74c0-5.9 4.8-10.7 10.7-10.7 2.85 0 5.54 1.11 7.56 3.13a10.6 10.6 0 0 1 3.13 7.56c0 5.9-4.8 10.7-10.7 10.7Zm5.88-8.02c-.32-.16-1.9-.94-2.2-1.05-.3-.1-.51-.16-.73.16-.21.32-.84 1.05-1.03 1.27-.19.21-.38.24-.7.08-.32-.16-1.35-.5-2.57-1.59-.95-.84-1.59-1.88-1.78-2.2-.19-.32-.02-.49.14-.65.14-.14.32-.38.48-.57.16-.19.21-.32.32-.54.1-.21.05-.4-.03-.56-.08-.16-.73-1.74-1-2.38-.26-.62-.53-.54-.73-.55h-.62c-.21 0-.56.08-.86.4-.3.32-1.13 1.1-1.13 2.68s1.16 3.11 1.32 3.33c.16.21 2.27 3.46 5.5 4.85.77.33 1.37.53 1.84.68.77.24 1.47.2 2.02.12.62-.1 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.13-.3-.21-.62-.37Z"/></svg>';
+    document.body.appendChild(button);
+  }
+  button.href = `https://wa.me/${number}`;
 }
 
 function renderShell(page, activePage, content) {
   document.body.innerHTML = `${renderHeader(activePage)}<main class="inner-page ${page}">${content}</main>${renderFooter()}`;
+  document.querySelector('.footer-links')?.insertAdjacentHTML('beforeend', '<a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a>');
+  mountWhatsAppButton();
   bindNavigation();
   if (page === 'partners-page') window.addEventListener('storage', () => window.location.reload());
 }
@@ -1576,7 +1631,7 @@ function renderGallery() {
   const conferences = getSiteData().conferences;
   const blocks = conferences.map((conference) => {
     const images = Array.isArray(conference.images) ? conference.images : [];
-    const gallery = images.length ? `<div class="gallery-side"><div class="gallery-slider-shell"><button class="gallery-control" type="button" data-gallery-previous="${escapeHtml(conference.id)}" aria-label="Previous images">←</button><div class="gallery-grid" data-gallery-track="${escapeHtml(conference.id)}">${images.map((image, index) => `<figure><button class="gallery-image-button" type="button" data-gallery-event="${escapeHtml(conference.id)}" data-gallery-index="${index}" aria-label="Open ${escapeHtml(image.name || 'Gallery image')}"><img src="${image.data}" alt="${escapeHtml(image.name)}"></button></figure>`).join('')}</div><button class="gallery-control" type="button" data-gallery-next="${escapeHtml(conference.id)}" aria-label="Next images">→</button></div><div class="gallery-dots" data-gallery-dots="${escapeHtml(conference.id)}" aria-label="Gallery position"></div></div>` : '';
+    const gallery = images.length ? `<div class="gallery-side"><div class="gallery-slider-shell"><button class="gallery-control" type="button" data-gallery-previous="${escapeHtml(conference.id)}" aria-label="Previous images">←</button><div class="gallery-grid" data-gallery-track="${escapeHtml(conference.id)}">${images.map((image, index) => `<figure><button class="gallery-image-button" type="button" data-gallery-event="${escapeHtml(conference.id)}" data-gallery-index="${index}" aria-label="Open ${escapeHtml(image.name || 'Gallery image')}"><img src="${image.data}" alt="${escapeHtml(image.name)}" loading="lazy" decoding="async"></button></figure>`).join('')}</div><button class="gallery-control" type="button" data-gallery-next="${escapeHtml(conference.id)}" aria-label="Next images">→</button></div><div class="gallery-dots" data-gallery-dots="${escapeHtml(conference.id)}" aria-label="Gallery position"></div></div>` : '';
     return `<section class="gallery-event${gallery ? ' has-images' : ''}" id="${escapeHtml(conference.id)}"><div class="gallery-event-heading"><p class="tag">${escapeHtml(conference.date)} / ${escapeHtml(conference.status)}</p><div class="gallery-title-row"><h2>${escapeHtml(conference.title)}</h2><span class="gallery-title-separator" aria-hidden="true">|</span><p>${escapeHtml(conference.description)}</p></div></div>${gallery}</section>`;
   }).join('');
   renderShell('gallery-page', 'gallery', `${pageIntro('gallery', '06', 'GALLERY', 'Gallery', 'Gallery')}${blocks}<div class="image-lightbox" id="image-lightbox" role="dialog" aria-modal="true" aria-label="Expanded gallery image" aria-hidden="true"><div class="lightbox-overlay-click" aria-hidden="true"></div><button class="lightbox-close" type="button" aria-label="Close expanded image">×</button><div class="lightbox-meta" id="lightbox-counter" aria-live="polite">1 / 1</div><button class="lightbox-nav lightbox-previous" type="button" aria-label="Previous image">←</button><img id="lightbox-image" alt=""><button class="lightbox-nav lightbox-next" type="button" aria-label="Next image">→</button></div>`);
@@ -1766,6 +1821,7 @@ function startPage() {
   }
   if (page === 'sponsors' || page === 'exhibitors') renderShell('partners-page', 'sponsors', partnershipPageContent());
   if (page === 'general') renderGeneralPage();
+  if (page === 'privacy' || page === 'terms') renderLegalPage(page);
   if (page === 'contact') {
     const data = getSiteData();
     const query = new URLSearchParams(window.location.search);
@@ -1813,7 +1869,17 @@ function generalDetails() {
   return renderAccordion(getPageConfig('general').sections);
 }
 
+function renderLegalPage(page) {
+  const wanted = page === 'privacy' ? 'Privacy Policy' : 'Terms & Conditions';
+  const section = (getPageConfig('general').sections || []).find((item) => item.heading === wanted);
+  const title = section?.heading || wanted;
+  renderShell('legal-page', '', `<section class="page-hero section-dark"><div class="page-hero-copy"><h1>${escapeHtml(title)}</h1></div></section><section class="page-section section-light"><article class="details-body legal-policy">${renderRichBody(section?.body || '')}</article></section>`);
+}
+
 if (document.body.dataset.page) {
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'nvs-site-data') window.location.reload();
+  });
   if (window.NVS_API && NVS_API.bootstrap) NVS_API.bootstrap().finally(startPage);
   else startPage();
 }

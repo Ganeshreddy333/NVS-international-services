@@ -17,16 +17,32 @@ if (!JWT_SECRET || JWT_SECRET === 'change_this_to_a_long_random_string') {
 
 const app = express();
 app.use(express.json({ limit: '25mb' })); // room for base64 gallery images
+app.disable('x-powered-by');
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
 
 // Only allow the configured website origins to call the API.
-const allowedOrigins = (process.env.CORS_ORIGIN || '')
+const configuredOrigins = (process.env.CORS_ORIGIN || '')
   .split(',').map((value) => value.trim()).filter(Boolean);
+const allowedOrigins = configuredOrigins.length
+  ? configuredOrigins
+  : (process.env.NODE_ENV === 'production' ? [] : ['http://127.0.0.1:8000', 'http://localhost:8000']);
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('Origin not allowed by CORS'));
+    const error = new Error('Origin not allowed by CORS');
+    error.status = 403;
+    return callback(error);
   }
 }));
 
@@ -100,12 +116,20 @@ app.put('/api/content', requireAdmin, async (req, res) => {
 app.post('/api/inquiries', inquiryLimiter, async (req, res) => {
   try {
     const { name = '', email = '', phone = '', subject = '', message = '' } = req.body || {};
-    if (!String(name).trim() || !String(email).trim()) {
-      return res.status(400).json({ error: 'Name and email are required' });
+    const normalizedEmail = String(email).trim();
+    const normalizedName = String(name).trim();
+    if (!normalizedName || !normalizedEmail || !String(phone).trim() || !String(subject).trim() || !String(message).trim()) {
+      return res.status(400).json({ error: 'Name, email, phone, subject, and message are required' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'Enter a valid email address' });
+    }
+    if (normalizedName.length > 150 || normalizedEmail.length > 200 || String(phone).length > 60 || String(subject).length > 255 || String(message).length > 5000) {
+      return res.status(400).json({ error: 'One or more enquiry fields exceed the allowed length' });
     }
     const [result] = await pool.query(
       'INSERT INTO inquiries (name, email, phone, subject, message) VALUES (?, ?, ?, ?, ?)',
-      [String(name).slice(0, 150), String(email).slice(0, 200), String(phone).slice(0, 60),
+      [normalizedName, normalizedEmail, String(phone).trim(),
        String(subject).slice(0, 255), String(message).slice(0, 5000)]
     );
     res.status(201).json({ ok: true, id: result.insertId });
@@ -133,6 +157,14 @@ app.delete('/api/inquiries/:id', requireAdmin, async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Could not delete enquiry' });
   }
+});
+
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    return res.status(400).json({ error: 'Request body must contain valid JSON' });
+  }
+  res.status(error.status === 403 ? 403 : 500).json({ error: error.status === 403 ? 'Origin not allowed' : 'Request failed' });
 });
 
 app.listen(PORT, () => console.log(`NVS API running on http://127.0.0.1:${PORT}`));

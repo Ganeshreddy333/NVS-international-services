@@ -3,7 +3,7 @@
 // if the API is unreachable, the site keeps using localStorage + defaults.
 (function () {
   // Point this at your backend. Change to your deployed API URL in production.
-  const API_BASE = window.NVS_API_BASE || 'http://127.0.0.1:4000';
+  const API_BASE = window.NVS_API_BASE || 'http://localhost:4000';
   const TOKEN_KEY = 'nvs-admin-token';
   const DATA_KEY = 'nvs-site-data';
 

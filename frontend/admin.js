@@ -287,6 +287,8 @@ function fillCompanyForm() {
   document.querySelector('#email').value = data.contact.email;
   document.querySelector('#phone').value = data.contact.phone;
   document.querySelector('#location').value = data.contact.location;
+  document.querySelector('#whatsapp-number').value = data.websiteInformation.whatsappNumber || '9391720171';
+  document.querySelector('#linkedin-url').value = data.websiteInformation.linkedinUrl || '';
 }
 
 function resetConferenceForm() {
@@ -371,6 +373,9 @@ companyForm.addEventListener('submit', (event) => {
   data.contact.email = document.querySelector('#email').value;
   data.contact.phone = document.querySelector('#phone').value;
   data.contact.location = document.querySelector('#location').value;
+  data.websiteInformation = data.websiteInformation || {};
+  data.websiteInformation.whatsappNumber = document.querySelector('#whatsapp-number').value.trim();
+  data.websiteInformation.linkedinUrl = document.querySelector('#linkedin-url').value.trim();
   saveSiteData(data);
   showMessage('Company details saved.');
 });

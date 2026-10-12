@@ -1,4 +1,3 @@
-const adminCredentials = { username: 'Ganeshreddy', password: 'GaneshReddy@0333' };
 const adminSessionKey = 'nvs-admin-session';
 
 function hasAdminSession() {
@@ -29,8 +28,6 @@ function bindAdminAuthentication() {
     const username = document.querySelector('#admin-username').value.trim();
     const password = document.querySelector('#admin-password').value;
 
-    // Prefer the backend (secure, shared). Fall back to the local check only
-    // if the API is unreachable, so the panel still works offline.
     if (window.NVS_API && NVS_API.login) {
       try {
         await NVS_API.login(username, password);
@@ -42,30 +39,11 @@ function bindAdminAuthentication() {
         return;
       } catch (error) {
         if (NVS_API.hasToken()) NVS_API.clearToken();
-        // Network/server down → try local fallback below. Wrong credentials
-        // reported by the server will also fall through to the local check.
-        if (username === adminCredentials.username && password === adminCredentials.password) {
-          sessionStorage.setItem(adminSessionKey, 'authenticated');
-          loginError.textContent = '';
-          loginForm.reset();
-          showAdminApp();
-          window.dispatchEvent(new Event('admin-authenticated'));
-        } else {
-          loginError.textContent = 'The username or password is incorrect.';
-        }
+        loginError.textContent = error.message || 'Could not connect to the authentication service.';
         return;
       }
     }
-
-    if (username === adminCredentials.username && password === adminCredentials.password) {
-      sessionStorage.setItem(adminSessionKey, 'authenticated');
-      loginError.textContent = '';
-      loginForm.reset();
-      showAdminApp();
-      window.dispatchEvent(new Event('admin-authenticated'));
-    } else {
-      loginError.textContent = 'The username or password is incorrect.';
-    }
+    loginError.textContent = 'The authentication service is not configured.';
   });
 
   logoutButton?.addEventListener('click', () => {

@@ -247,6 +247,14 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,
   .button:hover,.conference-card:hover,.package:hover,
   .directory-grid a:hover,.service-grid article:hover{transform:none}
 }
+.whatsapp-float{position:fixed;right:24px;bottom:24px;z-index:1000;width:60px;height:60px;display:grid;place-items:center;border-radius:50%;background:#25d366;color:#fff;box-shadow:0 5px 18px rgba(0,0,0,.24);transition:transform .18s ease,box-shadow .18s ease}
+.whatsapp-float:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+.whatsapp-float svg{width:34px;height:34px}
+.linkedin-float{position:fixed;right:24px;bottom:96px;z-index:1000;width:60px;height:60px;display:grid;place-items:center;border-radius:50%;background:#0a66c2;color:#fff;box-shadow:0 5px 18px rgba(0,0,0,.24);transition:transform .18s ease,box-shadow .18s ease}
+.linkedin-float:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.3)}
+.linkedin-float svg{width:31px;height:31px}
+@media(max-width:620px){.whatsapp-float{right:16px;bottom:16px;width:56px;height:56px}.whatsapp-float svg{width:32px;height:32px}}
+@media(max-width:620px){.linkedin-float{right:16px;bottom:84px;width:56px;height:56px}.linkedin-float svg{width:29px;height:29px}}
 
 /* ============================================================
    MODERN REDESIGN LAYER (2026) — card-based, colourful, premium.
@@ -437,3 +445,5 @@ body{background:#f4f8fd;-webkit-font-smoothing:antialiased;text-rendering:optimi
 
 /* Section-manager head row */
 .page-sections-head h2,.website-information-heading{border-bottom:0;padding-bottom:0}
+.legal-page .legal-policy{max-width:900px;margin:0 auto;padding-right:0}
+.legal-page .legal-policy .details-subheading{font-size:15px;font-weight:800;color:var(--ink);margin:20px 0 8px;letter-spacing:0;text-transform:none}
