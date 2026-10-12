@@ -1421,12 +1421,20 @@ function getPartnerships() {
   return getSiteData().partnerships || structuredClone(defaultSiteData.partnerships);
 }
 
+let siteDataSaveQueue = Promise.resolve();
+
 function saveSiteData(data) {
-  localStorage.setItem('nvs-site-data', JSON.stringify(data));
-  // When an admin is signed in, persist to the backend so every visitor sees it.
-  if (window.NVS_API && NVS_API.hasToken && NVS_API.hasToken()) {
-    NVS_API.saveContent(data).catch(() => {});
+  const serialized = JSON.stringify(data);
+  localStorage.setItem('nvs-site-data', serialized);
+
+  if (!window.NVS_API || !NVS_API.hasToken || !NVS_API.hasToken()) {
+    return Promise.resolve('local');
   }
+
+  const snapshot = JSON.parse(serialized);
+  const request = siteDataSaveQueue.then(() => NVS_API.saveContent(snapshot));
+  siteDataSaveQueue = request.catch(() => {});
+  return request.then(() => 'server', () => 'failed');
 }
 
 function escapeHtml(value = '') {

@@ -125,11 +125,11 @@ function newPageItem(kind) {
   return { id: makeSectionId(), variant: '', kicker: '', heading: '', body: '', listStyle: 'none', listItems: [], bodyAfter: '' };
 }
 
-function persistPageItems(pageKey, kind, items) {
+function persistPageItems(pageKey, kind, items, successMessage = '') {
   const page = ensurePageData(pageKey);
   if (kind === 'home') page.directory = items;
   else page.sections = items;
-  saveSiteData(data);
+  saveAdminData(successMessage);
 }
 
 function renderPageSections() {
@@ -168,9 +168,8 @@ function renderPageSections() {
     card.querySelector('[data-remove]')?.addEventListener('click', () => {
       const current = collectPageItems(kind);
       current.splice(index, 1);
-      persistPageItems(pageKey, kind, current);
+      persistPageItems(pageKey, kind, current, 'Section removed.');
       renderPageSections();
-      showMessage('Section removed.');
     });
   });
 
@@ -181,8 +180,7 @@ function renderPageSections() {
     renderPageSections();
   });
   pageSectionsBody.querySelector('#save-page-sections')?.addEventListener('click', () => {
-    persistPageItems(pageKey, kind, collectPageItems(kind));
-    showMessage('Page sections saved.');
+    persistPageItems(pageKey, kind, collectPageItems(kind), 'Page sections saved.');
   });
 }
 
@@ -225,9 +223,8 @@ function renderPartnerships() {
   }));
   partnershipList.querySelectorAll('[data-partner-delete]').forEach((button) => button.addEventListener('click', () => {
     data.partnerships = data.partnerships.filter((item) => item.id !== button.dataset.partnerDelete);
-    saveSiteData(data);
+    saveAdminData('Sponsor or exhibitor removed.');
     renderPartnerships();
-    showMessage('Sponsor or exhibitor removed.');
   }));
 }
 
@@ -261,15 +258,17 @@ function renderInquiries() {
         NVS_API.deleteInquiry(id).then(() => { renderInquiries(); showMessage('Enquiry deleted.'); }).catch(() => showMessage('Could not delete enquiry on the server.'));
       } else {
         data.inquiries = (data.inquiries || []).filter((inquiry) => String(inquiry.id) !== id);
-        saveSiteData(data);
+        saveAdminData('Enquiry deleted.');
         renderInquiries();
-        showMessage('Enquiry deleted.');
       }
     }));
   };
 
   if (window.NVS_API && NVS_API.listInquiries && NVS_API.hasToken()) {
-    NVS_API.listInquiries().then((rows) => paint(rows, true)).catch(() => paint(data.inquiries || [], false));
+    NVS_API.listInquiries().then((rows) => paint(rows, true)).catch((error) => {
+      card.innerHTML = '<h2>Contact Enquiries</h2><p class="muted">Could not load contact enquiries from the server. Please sign in again or retry.</p>';
+      showMessage(`Could not load enquiries: ${error.message}`);
+    });
   } else {
     paint(data.inquiries || [], false);
   }
@@ -279,6 +278,24 @@ function showMessage(text) {
   message.textContent = text;
   message.classList.add('show');
   window.setTimeout(() => message.classList.remove('show'), 2600);
+}
+
+function saveAdminData(successMessage = '') {
+  return Promise.resolve().then(() => saveSiteData(data)).then((result) => {
+    if (result === 'server') {
+      if (successMessage) showMessage(successMessage);
+      return true;
+    }
+    if (result === 'local') {
+      showMessage('Changes are saved in this browser only. Sign in to sync them to the website.');
+    } else {
+      showMessage('Changes are saved in this browser, but server sync failed. Sign in again and retry.');
+    }
+    return false;
+  }).catch((error) => {
+    showMessage(`Could not save changes: ${error.message}`);
+    return false;
+  });
 }
 
 function fillCompanyForm() {
@@ -349,9 +366,8 @@ function deleteConference(id) {
   const index = data.conferences.findIndex((item) => item.id === id);
   if (index < 0) return;
   data.conferences.splice(index, 1);
-  saveSiteData(data);
+  saveAdminData('Conference deleted.');
   renderEvents();
-  showMessage('Conference deleted.');
 }
 
 function renderGalleryPreview() {
@@ -359,10 +375,9 @@ function renderGalleryPreview() {
   galleryPreview.innerHTML = event?.images.length ? event.images.map((image, index) => `<figure><img src="${image.data}" alt="${escapeHtml(image.name)}"><button type="button" data-image-index="${index}" aria-label="Remove image">×</button></figure>`).join('') : '<p class="muted">No images uploaded for this event yet.</p>';
   galleryPreview.querySelectorAll('[data-image-index]').forEach((button) => button.addEventListener('click', () => {
     event.images.splice(Number(button.dataset.imageIndex), 1);
-    saveSiteData(data);
+    saveAdminData('Gallery image removed.');
     renderGalleryPreview();
     renderEvents();
-    showMessage('Gallery image removed.');
   }));
 }
 
@@ -376,8 +391,7 @@ companyForm.addEventListener('submit', (event) => {
   data.websiteInformation = data.websiteInformation || {};
   data.websiteInformation.whatsappNumber = document.querySelector('#whatsapp-number').value.trim();
   data.websiteInformation.linkedinUrl = document.querySelector('#linkedin-url').value.trim();
-  saveSiteData(data);
-  showMessage('Company details saved.');
+  saveAdminData('Company details saved.');
 });
 
 pageContentForm.addEventListener('submit', (event) => {
@@ -388,8 +402,7 @@ pageContentForm.addEventListener('submit', (event) => {
     title: document.querySelector('#content-title').value,
     text: document.querySelector('#content-text').value
   };
-  saveSiteData(data);
-  showMessage('Page content saved.');
+  saveAdminData('Page content saved.');
 });
 
 partnershipForm.addEventListener('submit', (event) => {
@@ -397,16 +410,17 @@ partnershipForm.addEventListener('submit', (event) => {
   data.partnerships = data.partnerships || [];
   const idField = document.querySelector('#partnership-id');
   const values = { type: document.querySelector('#partnership-type').value, name: document.querySelector('#partnership-name').value, price: document.querySelector('#partnership-price').value, title: document.querySelector('#partnership-title').value, description: document.querySelector('#partnership-description').value, benefits: document.querySelector('#partnership-benefits').value };
+  let successMessage;
   if (idField.value) {
     const saved = data.partnerships.find((item) => item.id === idField.value);
     Object.assign(saved, values);
-    showMessage('Sponsor or exhibitor updated.');
+    successMessage = 'Sponsor or exhibitor updated.';
   } else {
     const slug = values.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     data.partnerships.push({ ...values, id: `${slug}-${Date.now()}` });
-    showMessage('Sponsor or exhibitor added.');
+    successMessage = 'Sponsor or exhibitor added.';
   }
-  saveSiteData(data);
+  saveAdminData(successMessage);
   resetPartnershipForm();
   renderPartnerships();
 });
@@ -415,15 +429,16 @@ conferenceForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const idField = document.querySelector('#conference-id');
   const values = { title: document.querySelector('#conference-title').value, date: document.querySelector('#conference-date').value, status: document.querySelector('#conference-status').value, description: document.querySelector('#conference-description').value, location: document.querySelector('#conference-location').value, theme: document.querySelector('#conference-theme').value };
+  let successMessage;
   if (idField.value) {
     const saved = data.conferences.find((item) => item.id === idField.value);
     Object.assign(saved, values);
-    showMessage('Conference updated.');
+    successMessage = 'Conference updated.';
   } else {
     data.conferences.push({ ...values, id: `${values.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}`, images: [] });
-    showMessage('Conference added.');
+    successMessage = 'Conference added.';
   }
-  saveSiteData(data);
+  saveAdminData(successMessage);
   resetConferenceForm();
   renderEvents();
 });
@@ -450,15 +465,9 @@ galleryUpload.addEventListener('change', (event) => {
         canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
         const galleryImage = { name: file.name, data: canvas.toDataURL('image/jpeg', 0.82) };
         conference.images.push(galleryImage);
-        try {
-          saveSiteData(data);
-          renderGalleryPreview();
-          renderEvents();
-          showMessage('Gallery image uploaded.');
-        } catch (error) {
-          conference.images.pop();
-          showMessage('Image is too large to save. Try a smaller image.');
-        }
+        saveAdminData('Gallery image uploaded.');
+        renderGalleryPreview();
+        renderEvents();
       });
       image.src = reader.result;
     });

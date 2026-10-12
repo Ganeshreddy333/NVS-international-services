@@ -58,13 +58,8 @@ Test it: open http://127.0.0.1:4000/api/health → `{"ok":true}`
 ## Connecting the website to this API
 
 The front-end client is already written: **`frontend/api.js`**.
-To switch the site from localStorage to the server, on each page load
-`api.js` before `site.js`/`admin.js`, e.g. add to the HTML `<head>` or before
-the existing script tags:
-
-```html
-<script src="api.js?v=1"></script>
-```
+All website pages already load `api.js` before `site.js`, and the admin page
+loads it before `site.js`, `auth.js`, and `admin.js`.
 
 `api.js` exposes `window.NVS_API` with:
 - `bootstrap()` — pulls `/api/content` into localStorage before the page renders
@@ -74,9 +69,10 @@ the existing script tags:
 - `postInquiry(inquiry)` — contact form → `POST /api/inquiries`
 - `listInquiries()` / `deleteInquiry(id)` — admin enquiries view
 
-The wiring of these calls into `site.js`, `admin.js`, and `auth.js` is a
-separate, reviewable step (it changes the admin login to use the server
-instead of the hard-coded credentials). Ask and it will be done.
+These API calls are wired into `site.js`, `admin.js`, and `auth.js`. Admin
+content edits are queued in order to prevent rapid updates from overwriting
+one another. The admin panel reports when a change was saved only locally or
+could not be synced to the server.
 
 ## Notes
 

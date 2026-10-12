@@ -53,7 +53,7 @@
       <div class="admin-view is-active" id="content-view">
       <section class="admin-card admin-page-content" id="page-content">
         <h2>Website Page Content</h2>
-        <p class="muted">Edit the main heading and introduction for each website page. Existing wording is loaded automatically and changes are saved in this browser.</p>
+        <p class="muted">Edit the main heading and introduction for each website page. Changes sync to the website when you are signed in and the server is available.</p>
         <form id="page-content-form" class="page-content-form">
           <div class="field"><label for="content-page">Choose page</label><select id="content-page"><option value="home">Home</option><option value="about">About Us</option><option value="conferences">Conferences</option><option value="sponsors">Sponsor &amp; Exhibit</option><option value="gallery">Gallery</option><option value="general">General Information</option><option value="contact">Contact Us</option></select></div>
           <div class="field"><label for="content-eyebrow">Page label</label><input id="content-eyebrow" required></div>
@@ -141,9 +141,9 @@
       </div>
       </div>
       <div class="admin-view" id="partnership-view"><section class="admin-card"><h2>Sponsors and Exhibitors</h2><p class="muted">Add, edit, or remove sponsorship and exhibition packages independently from conferences and gallery media.</p><form id="partnership-form" class="partnership-form"><input type="hidden" id="partnership-id"><div class="field"><label for="partnership-type">Type</label><select id="partnership-type"><option value="sponsor">Sponsor</option><option value="exhibitor">Exhibitor</option></select></div><div class="field"><label for="partnership-name">Name</label><input id="partnership-name" required></div><div class="field"><label for="partnership-price">Price</label><input id="partnership-price" required></div><div class="field"><label for="partnership-title">Heading</label><input id="partnership-title" required></div><div class="field"><label for="partnership-description">Description</label><textarea id="partnership-description" required></textarea></div><div class="field"><label for="partnership-benefits">Benefits, one per line</label><textarea id="partnership-benefits" required></textarea></div><button class="button button-lime" type="submit"><span id="partnership-submit-label">Add Package</span> <span>↗</span></button><button class="button button-ghost clear-button" id="partnership-clear" type="button">Clear</button></form><div id="partnership-list" class="partnership-list"></div></section></div>
-      <div class="admin-view" id="media-view"><section class="admin-card" id="gallery-manager"><h2>Event Gallery Manager</h2><p class="muted">Choose an event, then upload as many images as needed. Images are saved in this browser for the matching event gallery page.</p><div class="field" style="max-width:520px;margin-top:22px"><label for="gallery-event">Choose event</label><select id="gallery-event"></select></div><div class="upload-box"><input id="gallery-upload" type="file" accept="image/*" multiple><p class="muted" style="margin-top:10px">Upload images for the selected event</p></div><div id="gallery-preview" class="gallery-preview"></div></section></div>
+      <div class="admin-view" id="media-view"><section class="admin-card" id="gallery-manager"><h2>Event Gallery Manager</h2><p class="muted">Choose an event, then upload images for the matching conference gallery. Changes sync to the website when you are signed in and the server is available.</p><div class="field" style="max-width:520px;margin-top:22px"><label for="gallery-event">Choose event</label><select id="gallery-event"></select></div><div class="upload-box"><input id="gallery-upload" type="file" accept="image/*" multiple><p class="muted" style="margin-top:10px">Upload images for the selected event</p></div><div id="gallery-preview" class="gallery-preview"></div></section></div>
       <div class="admin-view" id="enquiries-view"><section class="admin-card" id="inquiry-manager"><h2>Contact Enquiries</h2><div class="inquiry-list"></div></section></div>
-      <div class="admin-view" id="settings-view"><section class="admin-card"><h2>Settings</h2><p class="muted">Website data is stored in this browser. Use the existing admin controls to update content, conferences, media, and enquiries.</p><button class="button button-ghost admin-logout" id="settings-logout" type="button">Sign Out</button></section></div>
+      <div class="admin-view" id="settings-view"><section class="admin-card"><h2>Settings</h2><p class="muted">Website content is saved to the server so changes are shared with visitors. Use the admin controls to update content, conferences, media, and enquiries.</p><button class="button button-ghost admin-logout" id="settings-logout" type="button">Sign Out</button></section></div>
     </main>
   </div>
   <script src="api.js?v=20260928"></script>
@@ -151,7 +151,7 @@
     // Pull the latest content from the backend into localStorage first, then
     // load the admin scripts in order (admin.js reads content synchronously).
     (window.NVS_API && NVS_API.bootstrap ? NVS_API.bootstrap() : Promise.resolve()).finally(() => {
-      ['site.js?v=20261012-policy', 'auth.js?v=20260928-api', 'admin.js?v=20261012-whatsapp'].reduce(
+      ['site.js?v=20261013-save-sync', 'auth.js?v=20260928-api', 'admin.js?v=20261013-save-sync-2'].reduce(
         (chain, src) => chain.then(() => new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;
