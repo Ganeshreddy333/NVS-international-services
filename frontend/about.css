@@ -1,0 +1,55 @@
+/* About page: editorial science journal layout with a documentary conference image. */
+.about-page{background:#f8f6f0}
+.about-page .about-masthead{min-height:600px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;background:#102b43;color:#fff}
+.about-page .about-masthead-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:72px 5vw 58px 8vw}
+.about-page .about-masthead-kicker{margin-bottom:24px;color:#f3b563;font:700 10px var(--mono);letter-spacing:.16em;text-transform:uppercase}
+.about-page .about-masthead h1{max-width:670px;font-family:Georgia,"Times New Roman",serif;font-size:clamp(43px,5.2vw,74px);font-weight:400;line-height:1.02;letter-spacing:-.045em}
+.about-page .about-masthead h1 em{font-style:italic;color:#f4b56c}
+.about-page .about-masthead-copy>p:not(.about-masthead-kicker){max-width:570px;margin-top:22px;color:#d1dbe2;font-size:15px;line-height:1.85}
+.about-page .about-masthead-actions{display:flex;align-items:center;gap:24px;margin-top:29px}
+.about-page .about-masthead-actions a{display:inline-flex;align-items:center;gap:14px;color:#f6f3eb;font-size:12px;font-weight:800}
+.about-page .about-masthead-actions a:first-child{padding:14px 17px;background:#f1a64f;color:#192b3a}
+.about-page .about-masthead-actions a:first-child span{font-size:17px}
+.about-page .about-masthead-actions a:last-child{padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,.42)}
+.about-page .about-masthead-meta{display:flex;flex-wrap:wrap;gap:12px 23px;margin-top:47px;padding-top:15px;border-top:1px solid rgba(255,255,255,.2);color:#b7c6d2;font:600 9px var(--mono);letter-spacing:.1em}
+.about-page .about-masthead-photo{position:relative;min-height:600px;margin:0;overflow:hidden;background:#544331}
+.about-page .about-masthead-photo:after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(0deg,rgba(10,23,34,.68),transparent)}
+.about-page .about-masthead-photo img{display:block;width:100%;height:100%;min-height:600px;object-fit:cover;object-position:center}
+.about-page .about-masthead-photo figcaption{position:absolute;z-index:1;left:28px;right:24px;bottom:24px;color:#fff;font-size:12px;letter-spacing:.02em}
+.about-page .about-ribbon{display:flex;align-items:center;justify-content:center;gap:clamp(15px,3.2vw,54px);min-height:64px;padding:13px 20px;background:#e6a24d;color:#183246;font:700 10px var(--mono);letter-spacing:.16em}
+.about-page .about-ribbon b{font-size:14px;color:#fff}
+.about-page .about-content{max-width:1280px;margin:0 auto;padding:45px 7vw 100px;background:transparent}
+.about-page .about-block{display:grid;grid-template-columns:minmax(205px,.72fr) minmax(0,1.55fr);gap:clamp(35px,7vw,104px);margin:0;padding:51px 0 55px;border:0;border-bottom:1px solid #d9d7cf;background:transparent}
+.about-page .about-chapter-heading{align-self:start;position:sticky;top:102px}
+.about-page .about-kicker{margin:0 0 17px;color:#b76c27;font:700 10px var(--mono);letter-spacing:.15em;text-transform:uppercase}
+.about-page .about-block h2{margin:0;color:#183448;font-family:Georgia,"Times New Roman",serif;font-size:clamp(26px,2.8vw,37px);font-weight:400;line-height:1.12;letter-spacing:-.025em}
+.about-page .about-opening{padding-top:67px;padding-bottom:68px}
+.about-page .about-opening h2{font-size:clamp(32px,3.8vw,50px)}
+.about-page .about-opening .about-kicker{color:#18765e}
+.about-page .about-chapter-copy{min-width:0}
+.about-page .about-chapter-copy>p:not(.about-signoff){margin:0 0 15px;color:#536473;font-size:14px;line-height:1.9}
+.about-page .about-chapter-copy p strong{color:#142f44}
+.about-page .about-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px;margin:22px 0 0;padding:0;border-top:1px solid #d9d7cf;background:transparent;list-style:none}
+.about-page .about-list li{display:grid;align-content:start;gap:7px;padding:18px 0;border-bottom:1px solid #d9d7cf;background:transparent}
+.about-page .about-list li strong{color:#183448;font-size:13px;line-height:1.5}
+.about-page .about-list li span{color:#657482;font-size:12px;line-height:1.75}
+.about-page .about-topic-list{counter-reset:about-topic;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 25px;margin:22px 0 0;padding:0;border-top:1px solid #d9d7cf;list-style:none;color:#425567;font-size:12px;line-height:1.6}
+.about-page .about-topic-list li{counter-increment:about-topic;display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #e5e2d9}
+.about-page .about-topic-list li:before{content:counter(about-topic,decimal-leading-zero);flex:0 0 23px;color:#c27b36;font:700 9px var(--mono)}
+.about-page .about-vision{position:relative;isolation:isolate;overflow:hidden;margin:18px -3vw 0;padding:45px 3vw;border:0;background:#183d53}
+.about-page .about-vision:after{content:"";position:absolute;z-index:-1;width:390px;height:390px;right:-105px;top:-205px;border:1px solid rgba(255,255,255,.17);border-radius:50%;box-shadow:0 0 0 35px rgba(255,255,255,.035),0 0 0 75px rgba(255,255,255,.025)}
+.about-page .about-vision .about-kicker{color:#f4b56c}
+.about-page .about-vision h2{color:#fff}
+.about-page .about-vision .about-chapter-copy>p{color:#d7e0e5}
+.about-page .about-vision .about-chapter-copy p strong{color:#f5bc79}
+.about-page .about-closing{padding-bottom:28px;border-bottom:0}
+.about-page .about-signoff{display:grid;gap:8px;margin:28px 0 0;padding:21px 0 0;border:0;border-top:2px solid #df9d48;border-radius:0;background:transparent;box-shadow:none}
+.about-page .about-signoff strong{color:#173448;font-family:Georgia,"Times New Roman",serif;font-size:21px;font-weight:400}
+.about-page .about-signoff span{color:#667683;font-size:11px;line-height:1.8}
+.about-page .about-signoff b{color:#18765e;font-size:12px;line-height:1.7}
+.about-page .about-chapter-copy .button{border-radius:0;background:#183d53;color:white;box-shadow:none}
+.about-page .about-chapter-copy .button:hover{background:#d9913f;color:#102b43;transform:translateY(-2px)}
+@media(max-width:900px){.about-page .about-masthead{grid-template-columns:1fr 1fr;min-height:520px}.about-page .about-masthead-copy{padding-left:6vw;padding-right:4vw}.about-page .about-masthead-photo,.about-page .about-masthead-photo img{min-height:520px}.about-page .about-content{padding-left:6vw;padding-right:6vw}.about-page .about-block{grid-template-columns:minmax(170px,.72fr) minmax(0,1.5fr);gap:34px}.about-page .about-vision{margin-left:-2vw;margin-right:-2vw;padding-left:2vw;padding-right:2vw}}
+@media(max-width:680px){.about-page .about-masthead{grid-template-columns:1fr}.about-page .about-masthead-copy{padding:55px 7vw 38px}.about-page .about-masthead h1{font-size:clamp(43px,11vw,62px)}.about-page .about-masthead-photo,.about-page .about-masthead-photo img{min-height:320px;max-height:390px}.about-page .about-masthead-actions{gap:17px}.about-page .about-masthead-meta{margin-top:32px}.about-page .about-ribbon{justify-content:flex-start;overflow:hidden;white-space:nowrap;font-size:9px;letter-spacing:.1em}.about-page .about-content{padding:26px 7vw 70px}.about-page .about-block{grid-template-columns:1fr;gap:16px;padding:34px 0}.about-page .about-chapter-heading{position:static}.about-page .about-block h2{max-width:500px;font-size:31px}.about-page .about-opening h2{font-size:36px}.about-page .about-vision{margin:10px -5vw 0;padding:32px 5vw}.about-page .about-list{grid-template-columns:1fr}}
+@media(max-width:440px){.about-page .about-masthead-actions{align-items:flex-start;flex-direction:column}.about-page .about-masthead-photo,.about-page .about-masthead-photo img{min-height:270px;max-height:310px}.about-page .about-topic-list{grid-template-columns:1fr}.about-page .about-masthead-meta{font-size:8px}}
+@media(prefers-reduced-motion:reduce){.about-page *{scroll-behavior:auto!important;transition:none!important}}

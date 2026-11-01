@@ -1,3 +1,18 @@
+(() => {
+  const navigation = performance.getEntriesByType?.('navigation')?.[0];
+  const isReload = navigation?.type === 'reload' || performance.navigation?.type === 1;
+  if (!isReload) return;
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.addEventListener('pageshow', () => {
+    const previousBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => {
+      document.documentElement.style.scrollBehavior = previousBehavior;
+    });
+  }, { once: true });
+})();
+
 const defaultSiteData = {
   about: {
     title: 'About NVS International Services',
@@ -32,7 +47,7 @@ const defaultSiteData = {
     partnerships: { title: 'Partner With NVS International Services', text: 'Our Sponsorship & Exhibition Program provides a professional platform to strengthen brand visibility, showcase innovations, connect with researchers and industry professionals, and build meaningful global relationships.' },
     sponsorships: { title: 'Sponsorship Opportunities', items: 'PLATINUM SPONSOR - EUR 5,000\nGOLD SPONSOR - EUR 4,000\nSILVER SPONSOR - EUR 3,000\nADVERTISING SPONSOR - EUR 1,000' },
     exhibition: { title: 'Showcase Your Organization, Products & Innovations', text: 'The Exhibitor package is designed for organizations that want to directly showcase their products, technologies, services, equipment, publications, or solutions to an international scientific and professional audience.' },
-    conferenceProgram: { title: 'Explore Our Upcoming Conferences', items: 'Renewable Energy 2027 - March 3–4, 2027\nMaterials Science 2027 - March 10–12, 2027\nNanotechnology 2027 - April 2027\nBiotechnology 2027 - May 2027\nArtificial Intelligence 2027 - June 2027\nEnvironmental Science 2027 - September 2027\nEngineering 2027 - October 2027\nHealthcare & Medical Sciences 2027 - November 2027' },
+    conferenceProgram: { title: 'Explore Our Upcoming Conferences', items: 'Renewable Energy 2027 - March 3–4, 2027\nMaterials Science 2027 - March 10–12, 2027' },
     policies: { title: 'General Information', items: 'Terms & Conditions\nCancellation & Refund Policy\nFrequently Asked Questions (FAQs)\nPrivacy Policy' },
     finalCta: { title: 'Be Part of the Global Scientific Community', text: 'Discover upcoming conferences, connect with experts, share your research, and explore new opportunities for scientific collaboration.' },
     footer: { title: 'Stay Updated', text: 'Subscribe to receive conference news, program updates, and announcements directly in your inbox.' }
@@ -48,12 +63,6 @@ const defaultSiteData = {
   conferences: [
     { id: 'renewable-energy-2027', status: 'upcoming', date: 'March 3–4, 2027', title: 'Renewable Energy 2027', description: 'World Conference on Renewable Energy & Sustainable Energy', location: 'Virtual Conference | Live Online', theme: 'Advancing Sustainable Energy Futures: Innovation, Integration, and Global Impact', images: [] },
     { id: 'materials-science-2027', status: 'upcoming', date: 'March 10–12, 2027', title: 'Materials Science 2027', description: 'International Conference on Advanced Materials Science and Engineering', location: 'Berlin, Germany', theme: 'Innovations and Breakthroughs in Materials Science and Engineering', images: [] },
-    { id: 'nanotechnology-2027', status: 'upcoming', date: 'April 2027', title: 'Nanotechnology 2027', description: 'International Conference on Nanotechnology & Nanomaterials', location: 'Amsterdam, Netherlands', theme: 'Exploring the Frontiers of Nanoscale Science and Technology', images: [] },
-    { id: 'biotechnology-2027', status: 'upcoming', date: 'May 2027', title: 'Biotechnology 2027', description: 'International Conference on Biotechnology & Life Sciences', location: 'Europe', theme: 'Innovations in Biotechnology for a Sustainable Future', images: [] },
-    { id: 'artificial-intelligence-2027', status: 'upcoming', date: 'June 2027', title: 'Artificial Intelligence 2027', description: 'International Conference on Artificial Intelligence, Data Science & Emerging Technologies', location: 'Europe', theme: 'Intelligent Technologies Transforming Science, Industry & Society', images: [] },
-    { id: 'environmental-science-2027', status: 'upcoming', date: 'September 2027', title: 'Environmental Science 2027', description: 'International Conference on Environmental Science & Sustainable Technologies', location: 'Europe', theme: 'Innovative Solutions for a Sustainable and Resilient Future', images: [] },
-    { id: 'engineering-2027', status: 'upcoming', date: 'October 2027', title: 'Engineering 2027', description: 'International Conference on Engineering, Technology & Innovation', location: 'Europe', theme: 'Engineering Innovation for the Next Generation', images: [] },
-    { id: 'healthcare-medical-sciences-2027', status: 'upcoming', date: 'November 2027', title: 'Healthcare & Medical Sciences 2027', description: 'International Conference on Healthcare, Medical & Biomedical Sciences', location: 'Europe', theme: 'Advancing Healthcare Through Science, Technology & Innovation', images: [] }
   ],
   pages: {
     about: { kind: 'blocks', sections: [
@@ -1402,6 +1411,9 @@ function getSiteData() {
       conferences: Array.isArray(savedData.conferences) && savedData.conferences.length ? savedData.conferences.map((conference) => ({ ...conference, images: Array.isArray(conference.images) ? conference.images : [] })) : structuredClone(baseData.conferences),
       inquiries: Array.isArray(savedData.inquiries) ? savedData.inquiries : []
     };
+    const removedConferenceIds = ['nanotechnology-2027', 'biotechnology-2027', 'artificial-intelligence-2027', 'environmental-science-2027', 'engineering-2027', 'healthcare-medical-sciences-2027'];
+    const removedConferenceTitles = ['Nanotechnology 2027', 'Biotechnology 2027', 'Artificial Intelligence 2027', 'Environmental Science 2027', 'Engineering 2027', 'Healthcare & Medical Sciences 2027'];
+    mergedData.conferences = mergedData.conferences.filter((conference) => !removedConferenceIds.includes(conference.id) && !removedConferenceTitles.includes(conference.title));
 
     if (savedData.about?.text === 'NVS International Services is an organization supporting international conferences, scientific events, academic networking, professional engagement, and global knowledge exchange.') {
       mergedData.about.text = baseData.about.text;
@@ -1535,16 +1547,21 @@ function renderHeader(activePage = '') {
     ['sponsors.html', 'Sponsor & Exhibit', 'sponsors'],
     ['gallery.html', 'Gallery', 'gallery'],
     ['general-information.html', 'General Information', 'general'],
+    ['careers.html', 'Careers', 'careers'],
     ['contact.html', 'Contact Us', 'contact']
   ];
-  return `<header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="logo.svg" alt="NVS International Services"><span class="brand-name">NVS International<br>Services</span></a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span></button><nav class="main-nav">${links.map(([href, label, key]) => `<a class="${key === activePage ? 'active' : ''}" href="${href}">${label}</a>`).join('')}</nav></header>`;
+  return `<header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="assets/nvs-international-services-logo-transparent.png" alt="NVS International Services"><span class="brand-name">NVS International<br>Services</span></a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span></button><nav class="main-nav">${links.map(([href, label, key]) => `<a class="${key === activePage ? 'active' : ''}" href="${href}">${label}</a>`).join('')}</nav></header>`;
 }
 
 function renderFooter() {
   const data = getSiteData();
   const linkedinUrl = String(data.websiteInformation?.linkedinUrl || '').trim();
   const linkedinLink = /^https?:\/\//i.test(linkedinUrl) ? `<a class="linkedin-page-link" href="${escapeHtml(linkedinUrl)}" target="_blank" rel="noopener noreferrer">LinkedIn</a>` : '';
-  return `<footer class="site-footer"><div class="footer-columns"><div class="footer-company"><img class="footer-logo" src="logo.svg" alt="NVS International Services"><p>Empowering Scientific Innovation & Global Collaboration</p></div><div class="footer-links"><h3>QUICK LINKS</h3><a href="index.html">Home</a><a href="about.html">About Us</a><a href="conferences.html">Conferences</a><a href="sponsors.html">Sponsors & Exhibitors</a><a href="gallery.html">Gallery</a><a href="general-information.html">General Information</a><a href="contact.html">Contact Us</a></div><div class="footer-contact"><h3>CONTACT INFO</h3><a href="mailto:${escapeHtml(data.contact.email)}">${escapeHtml(data.contact.email)}</a><a href="tel:${escapeHtml(data.contact.phone)}">${escapeHtml(data.contact.phone)}</a><span>${escapeHtml(data.contact.location)}</span>${linkedinLink}</div></div><div class="footer-bottom"><span>© 2026 NVS International Services. All rights reserved.</span><span>NVS INTERNATIONAL SERVICES</span></div></footer>`;
+  return `<footer class="site-footer"><div class="footer-columns"><div class="footer-company"><img class="footer-logo" src="assets/nvs-international-services-logo-transparent.png" alt="NVS International Services"><p>Empowering Scientific Innovation & Global Collaboration</p></div><div class="footer-links"><h3>QUICK LINKS</h3><a href="index.html">Home</a><a href="about.html">About Us</a><a href="conferences.html">Conferences</a><a href="sponsors.html">Sponsors & Exhibitors</a><a href="gallery.html">Gallery</a><a href="general-information.html">General Information</a><a href="careers.html">Careers</a><a href="contact.html">Contact Us</a></div><div class="footer-contact"><h3>CONTACT INFO</h3><a href="mailto:${escapeHtml(data.contact.email)}">${escapeHtml(data.contact.email)}</a><a href="tel:${escapeHtml(data.contact.phone)}">${escapeHtml(data.contact.phone)}</a><span>${escapeHtml(data.contact.location)}</span>${linkedinLink}</div></div><div class="footer-bottom"><span>© 2026 NVS International Services. All rights reserved.</span><span>NVS INTERNATIONAL SERVICES</span></div></footer>`;
+}
+
+function careerPageContent() {
+  return `<section class="careers-hero careers-hero-compact"><div class="careers-hero-copy"><p class="careers-eyebrow">NVS INTERNATIONAL SERVICES <span> / CAREERS</span></p><h1>Careers at NVS</h1><p>Help connect scientific communities through international conferences, research, and professional exchange.</p></div><article class="careers-empty-state" aria-labelledby="careers-empty-title"><span class="careers-status-label"><i></i> CURRENT OPENINGS</span><h2 id="careers-empty-title">No current openings</h2><p>There are no open positions at this time. Please check back for future opportunities.</p></article></section><section class="careers-section careers-about"><div class="careers-section-heading"><p class="careers-kicker">OUR WORK</p><h2>Make room for ideas to meet.</h2></div><div class="careers-about-copy"><p>NVS International Services is an international scientific conference and event organization based in Hyderabad, India. We create professional platforms where researchers, academicians, students, and industry professionals can share knowledge and build connections.</p><p>Our programs include international conferences, scientific meetings, academic programs, workshops, technical sessions, research presentations, and industry-oriented events.</p></div></section><section class="careers-section careers-why"><div class="careers-section-heading"><p class="careers-kicker">WHY NVS</p><h2>Work that brings people and ideas together.</h2></div><div class="careers-reasons"><article><span>01</span><h3>Support scientific exchange</h3><p>Contribute to events where people present research, discuss new developments, and learn from work across disciplines.</p></article><article><span>02</span><h3>Connect communities</h3><p>Help bring researchers, universities, research institutions, and industry professionals into conversation.</p></article><article><span>03</span><h3>See ideas become programs</h3><p>Work around conferences, workshops, technical sessions, presentations, and other professional events.</p></article></div></section><section class="careers-section careers-growth"><div class="careers-section-heading"><p class="careers-kicker">CAREER GROWTH</p><h2>Build experience through meaningful work.</h2></div><div class="careers-growth-copy"><p>Depending on the role and event, working with NVS may provide experience in coordinating professional programs, communicating with contributors and participants, and supporting collaboration across scientific and industry communities.</p><p>Responsibilities, required experience, and any role-specific development opportunities will be described with each opening. There are no openings at this time.</p></div><div class="careers-growth-areas"><span>Program coordination</span><span>Professional communication</span><span>Cross-disciplinary collaboration</span><span>Conference and event delivery</span></div></section><section class="careers-section careers-support"><div class="careers-section-heading"><p class="careers-kicker">GROWTH &amp; SUPPORT</p><h2>Good work needs room to grow.</h2><p class="careers-support-intro">We want people to build useful skills, understand what is expected, and have a sustainable way to contribute. Details vary by role and will be described with each opening.</p></div><div class="careers-support-grid"><article><span>01 / PROFESSIONAL GROWTH</span><h3>Build skills through meaningful work.</h3><p>Roles may offer experience in event planning, program coordination, research communication, and working with international professional communities. Growth opportunities depend on the responsibilities of each position.</p></article><article><span>02 / WORK-LIFE BALANCE</span><h3>Clear expectations around time and workload.</h3><p>We aim to communicate schedules and workload expectations clearly. Conference periods can bring different coordination needs, so any adjusted hours, weekend work, or travel will be explained in the role details.</p></article><article><span>03 / WORKPLACE FACILITIES</span><h3>Know what the role provides.</h3><p>Work location, equipment, work arrangements, travel requirements, leave, compensation, and benefits can vary by position. Each opening will specify the facilities and support available for that role.</p></article><article><span>04 / TEAM SUPPORT</span><h3>Practical guidance and collaboration.</h3><p>We value clear communication, respectful teamwork, and well-defined responsibilities. Role-specific onboarding, feedback, and collaboration arrangements will be shared as part of the hiring process.</p></article></div></section><section class="careers-section careers-candidates"><div><p class="careers-kicker">WHO THIS WORK SERVES</p><h2>People curious about research, events, and collaboration.</h2></div><p>NVS works with scientific and academic communities across areas such as engineering, materials science, technology, healthcare, and interdisciplinary research. When roles are available, each listing will explain its responsibilities and qualifications.</p></section>`;
 }
 
 function mountLinkedInLink() {
@@ -1622,6 +1639,10 @@ function renderConferences(status) {
   return conferences.length ? conferences.map(conferenceCard).join('') : `<div class="empty-state"><p>No ${status} conferences have been added yet.</p></div>`;
 }
 
+function conferencePageContent() {
+  return `<section class="conference-masthead"><div class="conference-masthead-copy"><p class="conference-masthead-kicker">NVS INTERNATIONAL SERVICES <span> / </span> 2027 PROGRAM</p><h1>Meet where research <em>moves forward.</em></h1><p>Explore international conferences that bring researchers, scientists, academicians and industry professionals together to share work and exchange ideas.</p><a class="conference-masthead-cta" href="#upcoming">Browse the program <span>↓</span></a><div class="conference-masthead-meta"><span>SCIENCE</span><span>TECHNOLOGY</span><span>ENGINEERING</span><span>HEALTHCARE</span></div></div><figure class="conference-masthead-photo"><img src="assets/about-conference.png" alt="Illustrative scene of an audience at an international research conference" fetchpriority="high"><figcaption>Illustrative conference scene</figcaption></figure></section><div class="conference-services-band" aria-label="NVS conference services"><span class="conference-services-label">HOW WE SUPPORT EVENTS</span><span>Program planning</span><i aria-hidden="true">&middot;</i><span>Global outreach</span><i aria-hidden="true">&middot;</i><span>Participant support</span><i aria-hidden="true">&middot;</i><span>Sponsorship &amp; exhibition</span></div><section class="conference-program-section"><div class="conference-program-intro"><div><p class="conference-program-kicker">THE CONFERENCE PROGRAM</p><h2>Choose a conversation <em>to join.</em></h2></div><p>Browse upcoming events or look back at previous conferences. Dates, locations and themes are listed with each program.</p></div><nav class="conference-tabs" aria-label="Conference program"><a class="tab active" href="#upcoming" aria-current="page">Upcoming</a><a class="tab" href="#previous">Previously held</a></nav><section id="upcoming" class="conference-panel"><h2 class="conference-panel-title">Upcoming conferences</h2><div class="conference-list">${renderConferences('upcoming')}</div></section><section id="previous" class="conference-panel is-hidden"><h2 class="conference-panel-title">Previous conferences</h2><div class="conference-list">${renderConferences('previous')}</div></section></section>`;
+}
+
 function getPageContent(pageKey, fallback = {}) {
   return { ...(defaultSiteData.pageContent?.[pageKey] || {}), ...fallback, ...(getSiteData().pageContent?.[pageKey] || {}) };
 }
@@ -1639,10 +1660,10 @@ function renderGallery() {
   const conferences = getSiteData().conferences;
   const blocks = conferences.map((conference) => {
     const images = Array.isArray(conference.images) ? conference.images : [];
-    const gallery = images.length ? `<div class="gallery-side"><div class="gallery-slider-shell"><button class="gallery-control" type="button" data-gallery-previous="${escapeHtml(conference.id)}" aria-label="Previous images">←</button><div class="gallery-grid" data-gallery-track="${escapeHtml(conference.id)}">${images.map((image, index) => `<figure><button class="gallery-image-button" type="button" data-gallery-event="${escapeHtml(conference.id)}" data-gallery-index="${index}" aria-label="Open ${escapeHtml(image.name || 'Gallery image')}"><img src="${image.data}" alt="${escapeHtml(image.name)}" loading="lazy" decoding="async"></button></figure>`).join('')}</div><button class="gallery-control" type="button" data-gallery-next="${escapeHtml(conference.id)}" aria-label="Next images">→</button></div><div class="gallery-dots" data-gallery-dots="${escapeHtml(conference.id)}" aria-label="Gallery position"></div></div>` : '';
+    const gallery = images.length ? `<div class="gallery-side"><div class="gallery-slider-shell"><button class="gallery-control" type="button" data-gallery-previous="${escapeHtml(conference.id)}" aria-label="Previous images">←</button><div class="gallery-grid" data-gallery-track="${escapeHtml(conference.id)}">${images.map((image, index) => `<figure><button class="gallery-image-button" type="button" data-gallery-event="${escapeHtml(conference.id)}" data-gallery-index="${index}" aria-label="Open ${escapeHtml(image.name || 'Gallery image')}"><img src="${image.data}" alt="${escapeHtml(image.name)}" loading="lazy" decoding="async"></button></figure>`).join('')}</div><button class="gallery-control" type="button" data-gallery-next="${escapeHtml(conference.id)}" aria-label="Next images">→</button></div><div class="gallery-dots" data-gallery-dots="${escapeHtml(conference.id)}" aria-label="Gallery position"></div></div>` : `<div class="gallery-empty"><span>EVENT GALLERY</span><strong>Conference images will appear here.</strong><i aria-hidden="true">✳</i></div>`;
     return `<section class="gallery-event${gallery ? ' has-images' : ''}" id="${escapeHtml(conference.id)}"><div class="gallery-event-heading"><p class="tag">${escapeHtml(conference.date)} / ${escapeHtml(conference.status)}</p><div class="gallery-title-row"><h2>${escapeHtml(conference.title)}</h2><span class="gallery-title-separator" aria-hidden="true">|</span><p>${escapeHtml(conference.description)}</p></div></div>${gallery}</section>`;
   }).join('');
-  renderShell('gallery-page', 'gallery', `${pageIntro('gallery', '06', 'GALLERY', 'Gallery', 'Gallery')}${blocks}<div class="image-lightbox" id="image-lightbox" role="dialog" aria-modal="true" aria-label="Expanded gallery image" aria-hidden="true"><div class="lightbox-overlay-click" aria-hidden="true"></div><button class="lightbox-close" type="button" aria-label="Close expanded image">×</button><div class="lightbox-meta" id="lightbox-counter" aria-live="polite">1 / 1</div><button class="lightbox-nav lightbox-previous" type="button" aria-label="Previous image">←</button><img id="lightbox-image" alt=""><button class="lightbox-nav lightbox-next" type="button" aria-label="Next image">→</button></div>`);
+  renderShell('gallery-page', 'gallery', `${pageIntro('gallery', '06', 'GALLERY', 'Moments in research', 'A look back at the people, ideas and conversations that bring scientific communities together at NVS events.')}${blocks}<div class="image-lightbox" id="image-lightbox" role="dialog" aria-modal="true" aria-label="Expanded gallery image" aria-hidden="true"><div class="lightbox-overlay-click" aria-hidden="true"></div><button class="lightbox-close" type="button" aria-label="Close expanded image">×</button><div class="lightbox-meta" id="lightbox-counter" aria-live="polite">1 / 1</div><button class="lightbox-nav lightbox-previous" type="button" aria-label="Previous image">←</button><img id="lightbox-image" alt=""><button class="lightbox-nav lightbox-next" type="button" aria-label="Next image">→</button></div>`);
   const lightbox = document.querySelector('#image-lightbox');
   const lightboxImage = document.querySelector('#lightbox-image');
   const lightboxCounter = document.querySelector('#lightbox-counter');
@@ -1791,13 +1812,19 @@ function renderGallery() {
 }
 
 function aboutPageContent() {
-  return `<section class="about-content section-light">${renderBlocks(getPageConfig('about').sections)}</section>`;
+  const sections = getPageConfig('about').sections;
+  const chapters = (Array.isArray(sections) ? sections : []).map((block = {}) => {
+    const variantClass = { opening: ' about-opening', vision: ' about-vision', closing: ' about-closing' }[block.variant] || '';
+    const heading = `${block.kicker ? `<p class="about-kicker">${renderInline(stripLabelNumber(block.kicker))}</p>` : ''}${block.heading ? `<h2>${renderInline(block.heading)}</h2>` : ''}`;
+    const signoff = block.signoff ? `<p class="about-signoff"><strong>${renderInline(block.signoff.strong)}</strong><span>${renderInline(block.signoff.span)}</span><b>${renderInline(block.signoff.b)}</b></p>` : '';
+    const button = block.button ? `<p><a class="button button-lime" href="${escapeHtml(block.button.href)}">${renderInline(block.button.label)} <span>↗</span></a></p>` : '';
+    return `<article class="about-block${variantClass}"><header class="about-chapter-heading">${heading}</header><div class="about-chapter-copy">${renderParagraphs(block.body)}${renderList(block.listStyle, block.listItems)}${renderParagraphs(block.bodyAfter)}${signoff}${button}</div></article>`;
+  }).join('');
+  return `<section class="about-masthead"><div class="about-masthead-copy"><p class="about-masthead-kicker">ABOUT NVS INTERNATIONAL SERVICES</p><h1>Research moves forward when ideas <em>come together.</em></h1><p>NVS International Services creates professional spaces for the global scientific community to share research, exchange knowledge, and build connections across disciplines.</p><div class="about-masthead-actions"><a href="conferences.html">Explore conferences <span>↗</span></a><a href="contact.html">Talk with our team</a></div><div class="about-masthead-meta"><span>BASED IN HYDERABAD, INDIA</span><span>CONFERENCES · RESEARCH · COLLABORATION</span></div></div><figure class="about-masthead-photo"><img src="assets/about-conference.png" alt="Illustrative image of researchers and professionals attending a conference session" fetchpriority="high"><figcaption>Illustrative scene · scientific conference exchange</figcaption></figure></section><div class="about-ribbon" aria-hidden="true"><span>RESEARCH</span><b>✳</b><span>PEOPLE</span><b>✳</b><span>DISCOVERY</span><b>✳</b><span>COLLABORATION</span></div><section class="about-content">${chapters}</section>`;
 }
 
 function partnershipPageContent() {
-  return `${pageIntro('sponsors', '03', 'PARTNER WITH NVS', 'Sponsor and Exhibitor', 'Sponsor · Exhibit · Connect · Engage')}
-  <section class="partnership-content about-content section-light">${renderBlocks(getPageConfig('sponsors').sections)}</section>
-  <section class="page-section section-dark"><div class="section-label light-label">CURRENT PARTNERSHIP PACKAGES</div><div class="package-grid">${getPartnerships().map(partnerCard).join('')}</div></section>`;
+  return window.NVS_SPONSORSHIP_CONTENT || '<section class="page-section"><h1>Sponsorship &amp; Exhibition</h1><p>The sponsorship information could not be loaded. Please refresh the page.</p></section>';
 }
 
 function startPage() {
@@ -1809,15 +1836,23 @@ function startPage() {
     });
   }
   if (page === 'about') {
-    renderShell('about-page', 'about', `${pageIntro('about', '01', 'ABOUT US', 'About NVS International Services', 'Connecting scientific communities through knowledge, research and collaboration.')}${aboutPageContent()}`);
+    renderShell('about-page', 'about', aboutPageContent());
+  }
+  if (page === 'careers') {
+    renderShell('careers-page', 'careers', careerPageContent());
   }
   if (page === 'conferences') {
-    renderShell('conferences-page', 'conferences', `${pageIntro('conferences', '02', 'UPCOMING CONFERENCES', 'Explore Our Upcoming Conferences', 'Explore our upcoming international conferences, bringing together researchers, academics, scientists, engineers, industry professionals, innovators, and scientific communities from around the world.') }<section class="page-section section-paper"><div class="conference-tabs"><a class="tab active" href="#upcoming">Upcoming Conferences</a><a class="tab" href="#previous">Previous Held Conferences</a></div><div id="upcoming" class="conference-panel"><h2>Upcoming Conferences</h2><div class="conference-list">${renderConferences('upcoming')}</div></div><div id="previous" class="conference-panel is-hidden"><h2>Previous Held Conferences</h2><div class="conference-list">${renderConferences('previous')}</div></div></section>`);
+    renderShell('conferences-page', 'conferences', conferencePageContent());
     const conferenceTabs = document.querySelectorAll('.conference-tabs .tab');
     const conferencePanels = document.querySelectorAll('.conference-panel');
     const showConferencePanel = (panelId) => {
       conferencePanels.forEach((panel) => panel.classList.toggle('is-hidden', panel.id !== panelId));
-      conferenceTabs.forEach((tab) => tab.classList.toggle('active', tab.getAttribute('href') === `#${panelId}`));
+      conferenceTabs.forEach((tab) => {
+        const isActive = tab.getAttribute('href') === `#${panelId}`;
+        tab.classList.toggle('active', isActive);
+        if (isActive) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+      });
     };
     conferenceTabs.forEach((tab) => tab.addEventListener('click', (event) => {
       event.preventDefault();

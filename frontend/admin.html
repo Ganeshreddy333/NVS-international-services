@@ -151,7 +151,7 @@
     // Pull the latest content from the backend into localStorage first, then
     // load the admin scripts in order (admin.js reads content synchronously).
     (window.NVS_API && NVS_API.bootstrap ? NVS_API.bootstrap() : Promise.resolve()).finally(() => {
-      ['site.js?v=20261013-save-sync', 'auth.js?v=20260928-api', 'admin.js?v=20261013-save-sync-2'].reduce(
+      ['site.js?v=20261101-refresh-top', 'auth.js?v=20260928-api', 'admin.js?v=20261013-save-sync-2'].reduce(
         (chain, src) => chain.then(() => new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;
