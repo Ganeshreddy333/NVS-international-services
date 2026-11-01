@@ -111,9 +111,9 @@ body:has(main>.hero) .home-principles p{border-color:#e5d9cf;color:#514843}
 
 /* Gallery */
 .gallery-page{background:#faf7f2;color:#393432;--gallery-ink:#393432;--gallery-muted:#625a56;--gallery-line:#e7dcd2}
-.gallery-page .page-hero{background:radial-gradient(ellipse at 82% 22%,rgba(201,145,113,.19),transparent 30%),linear-gradient(120deg,#f0e4d9 0%,#faf3eb 58%,#f0e5dc 100%)}
-.gallery-page .page-hero:before,.gallery-page .page-hero:after{border-color:rgba(104,78,64,.17)}
-.gallery-page .page-hero-copy:before,.gallery-page .gallery-event-heading .tag{color:#795143}
+.gallery-page .page-hero{background:radial-gradient(ellipse at 82% 22%,rgba(185,91,111,.2),transparent 31%),linear-gradient(120deg,#f0d9df 0%,#f8e9ec 58%,#edd5dc 100%)}
+.gallery-page .page-hero:before,.gallery-page .page-hero:after{border-color:rgba(126,62,79,.2)}
+.gallery-page .page-hero-copy:before,.gallery-page .gallery-event-heading .tag{color:#994b5a}
 .gallery-page .page-hero h1,.gallery-page .page-hero-copy>p,.gallery-page .gallery-title-row h2{color:#393330}
 .gallery-page .gallery-event,.gallery-page .gallery-event:nth-of-type(even){background:#faf7f2;color:#393432}
 .gallery-page .gallery-event:before{background:#b78265}.gallery-page .gallery-grid figure{border-color:#e4d8ce;background:#f0e8e0}
@@ -187,7 +187,7 @@ html{scroll-padding-top:130px}
 .main-nav a:not(.nav-cta).active{background:#bd6546;color:#fff!important}
 @media(max-width:900px) and (min-width:621px){.main-nav{gap:2px;font-size:10.5px}.main-nav a:not(.nav-cta){padding:8px 6px}}
 
-/* Keep the Contact masthead tall and airy after all page-specific styles load. */
-.contact-page .page-hero{min-height:560px;padding-block:132px 120px}
-@media(max-width:800px){.contact-page .page-hero{min-height:470px;padding-block:108px 100px}}
-@media(max-width:620px){.contact-page .page-hero{min-height:420px;padding-block:88px 78px}}
+/* Keep the Contact masthead compact with balanced vertical spacing. */
+.contact-page .page-hero{min-height:400px;padding-block:68px 60px}
+@media(max-width:800px){.contact-page .page-hero{min-height:350px;padding-block:58px 52px}}
+@media(max-width:620px){.contact-page .page-hero{min-height:315px;padding-block:50px 44px}}

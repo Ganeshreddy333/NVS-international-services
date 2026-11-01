@@ -19,7 +19,7 @@ const defaultSiteData = {
     text: 'NVS International Services is an international scientific conference and event organization based in Hyderabad, India, creating professional platforms for research exchange and collaboration.'
   },
   contact: {
-    email: 'nvsinternstional.office@gmail.com',
+    email: 'info@nvsinternationalservices.com',
     phone: '+91 9505811873',
     location: 'Dilshuknagar, Hyderabad, India'
   },
@@ -1375,7 +1375,7 @@ If you receive any unusual payment request or communication claiming to represen
 # Contact Information
 # Contact Information
 **NVS International Services**
-Email: nvsinternstional.office@gmail.com
+Email: info@nvsinternationalservices.com
 Phone: +91 9505811873
 Location: Dilshuknagar, Hyderabad, Telangana, India
 For a specific conference, participants should also refer to the official conference website and conference-specific contact details, as contact information may vary between events.
@@ -1895,7 +1895,7 @@ function startPage() {
 }
 
 function packageCard(label, price, title, text) {
-  return `<article class="package"><div class="package-top"><span>${label}</span><strong>${price}</strong></div><h2>${title}</h2><p>${text}</p><ul><li>Logo placement on the conference website</li><li>Recognition as an official sponsor</li><li>Promotional materials</li><li>Social media recognition</li><li>Opportunity to connect with researchers and professionals</li></ul><a class="text-link" href="mailto:nvsinternstional.office@gmail.com?subject=${encodeURIComponent(label)} Enquiry">Become a ${label.toLowerCase()} <span>↗</span></a></article>`;
+  return `<article class="package"><div class="package-top"><span>${label}</span><strong>${price}</strong></div><h2>${title}</h2><p>${text}</p><ul><li>Logo placement on the conference website</li><li>Recognition as an official sponsor</li><li>Promotional materials</li><li>Social media recognition</li><li>Opportunity to connect with researchers and professionals</li></ul><a class="text-link" href="mailto:sponsors@nvsinternationalservices.com?subject=${encodeURIComponent(label)} Enquiry">Become a ${label.toLowerCase()} <span>↗</span></a></article>`;
 }
 
 function partnerCard(partner) {

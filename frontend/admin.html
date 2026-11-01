@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Private Admin | NVS International Services</title>
   <meta name="robots" content="noindex, nofollow">
-  <link rel="icon" type="image/png" sizes="256x256" href="/favicon-256.png">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="256x256" href="/assets/nvs-globe-favicon-256.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261101-globe">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/nvs-globe-favicon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -151,7 +151,7 @@
     // Pull the latest content from the backend into localStorage first, then
     // load the admin scripts in order (admin.js reads content synchronously).
     (window.NVS_API && NVS_API.bootstrap ? NVS_API.bootstrap() : Promise.resolve()).finally(() => {
-      ['site.js?v=20261101-refresh-top', 'auth.js?v=20260928-api', 'admin.js?v=20261013-save-sync-2'].reduce(
+      ['site.js?v=20261101-primary-email', 'auth.js?v=20260928-api', 'admin.js?v=20261013-save-sync-2'].reduce(
         (chain, src) => chain.then(() => new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;
