@@ -11,8 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=20260928-3">
   <link rel="stylesheet" href="pages.css?v=20261012-whatsapp">
+  <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
 <body>
   <header class="site-header">
@@ -26,8 +28,8 @@
       <h1>Admin<br><em>Sign in.</em></h1>
       <p>Use your authorized credentials to manage website content, events, galleries, and enquiries.</p>
       <form id="admin-login-form">
-        <div class="field"><label for="admin-username">Username</label><input id="admin-username" autocomplete="username" required></div>
-        <div class="field"><label for="admin-password">Password</label><input id="admin-password" type="password" autocomplete="current-password" required></div>
+        <div class="field"><label for="admin-username">Username</label><input class="form-control" id="admin-username" autocomplete="username" required></div>
+        <div class="field"><label for="admin-password">Password</label><input class="form-control" id="admin-password" type="password" autocomplete="current-password" required></div>
         <button class="button button-lime" type="submit">Sign In <span>↗</span></button>
         <p class="login-error" id="admin-login-error" aria-live="polite"></p>
       </form>
@@ -58,7 +60,7 @@
           <div class="field"><label for="content-page">Choose page</label><select id="content-page"><option value="home">Home</option><option value="about">About Us</option><option value="conferences">Conferences</option><option value="sponsors">Sponsor &amp; Exhibit</option><option value="gallery">Gallery</option><option value="general">General Information</option><option value="contact">Contact Us</option></select></div>
           <div class="field"><label for="content-eyebrow">Page label</label><input id="content-eyebrow" required></div>
           <div class="field"><label for="content-title">Main heading</label><input id="content-title" required></div>
-          <div class="field"><label for="content-text">Introduction text</label><textarea id="content-text" required></textarea></div>
+          <div class="field"><label for="content-text">Introduction text</label><textarea class="form-control rich-editor" id="content-text" required></textarea></div>
           <button class="button button-lime" type="submit">Save Page Content <span>↗</span></button>
         </form>
       </section>
@@ -71,7 +73,7 @@
           <h2>Company and Contact Information</h2>
           <form id="company-form">
             <div class="field"><label for="about-title">About heading</label><input id="about-title" required></div>
-            <div class="field"><label for="about-text">About text</label><textarea id="about-text" required></textarea></div>
+            <div class="field"><label for="about-text">About text</label><textarea class="form-control rich-editor" id="about-text" required></textarea></div>
             <div class="field"><label for="email">Email</label><input id="email" type="email" required></div>
             <div class="field"><label for="phone">Phone</label><input id="phone" required></div>
             <div class="field"><label for="whatsapp-number">WhatsApp number</label><input id="whatsapp-number" type="tel" inputmode="tel" placeholder="9391720171" required><small>Use a 10 digit Indian mobile number or include the country code.</small></div>
@@ -90,7 +92,7 @@
             <div class="field"><label for="conference-title">Conference title</label><input id="conference-title" required></div>
             <div class="field"><label for="conference-date">Date</label><input id="conference-date" placeholder="March 3–4, 2027" required></div>
             <div class="field"><label for="conference-status">Status</label><select id="conference-status"><option value="upcoming">Upcoming conference</option><option value="previous">Previous held conference</option></select></div>
-            <div class="field"><label for="conference-description">Description</label><textarea id="conference-description" required></textarea></div>
+            <div class="field"><label for="conference-description">Description</label><textarea class="form-control rich-editor" id="conference-description" required></textarea></div>
             <div class="field"><label for="conference-location">Location or mode</label><input id="conference-location" required></div>
             <div class="field"><label for="conference-theme">Theme</label><input id="conference-theme" required></div>
             <button class="button button-lime" type="submit"><span id="conference-submit-label">Add Conference</span> <span>↗</span></button><button class="button button-ghost clear-button" type="button" id="cancel-edit">Clear</button>
@@ -140,13 +142,14 @@
         </aside>
       </div>
       </div>
-      <div class="admin-view" id="partnership-view"><section class="admin-card"><h2>Sponsors and Exhibitors</h2><p class="muted">Add, edit, or remove sponsorship and exhibition packages independently from conferences and gallery media.</p><form id="partnership-form" class="partnership-form"><input type="hidden" id="partnership-id"><div class="field"><label for="partnership-type">Type</label><select id="partnership-type"><option value="sponsor">Sponsor</option><option value="exhibitor">Exhibitor</option></select></div><div class="field"><label for="partnership-name">Name</label><input id="partnership-name" required></div><div class="field"><label for="partnership-price">Price</label><input id="partnership-price" required></div><div class="field"><label for="partnership-title">Heading</label><input id="partnership-title" required></div><div class="field"><label for="partnership-description">Description</label><textarea id="partnership-description" required></textarea></div><div class="field"><label for="partnership-benefits">Benefits, one per line</label><textarea id="partnership-benefits" required></textarea></div><button class="button button-lime" type="submit"><span id="partnership-submit-label">Add Package</span> <span>↗</span></button><button class="button button-ghost clear-button" id="partnership-clear" type="button">Clear</button></form><div id="partnership-list" class="partnership-list"></div></section></div>
+      <div class="admin-view" id="partnership-view"><section class="admin-card"><h2>Sponsors and Exhibitors</h2><p class="muted">Add, edit, or remove sponsorship and exhibition packages independently from conferences and gallery media.</p><form id="partnership-form" class="partnership-form"><input type="hidden" id="partnership-id"><div class="field"><label for="partnership-type">Type</label><select id="partnership-type"><option value="sponsor">Sponsor</option><option value="exhibitor">Exhibitor</option></select></div><div class="field"><label for="partnership-name">Name</label><input id="partnership-name" required></div><div class="field"><label for="partnership-price">Price</label><input id="partnership-price" required></div><div class="field"><label for="partnership-title">Heading</label><input id="partnership-title" required></div><div class="field"><label for="partnership-description">Description</label><textarea class="rich-editor" id="partnership-description" required></textarea></div><div class="field"><label for="partnership-benefits">Benefits, one per line</label><textarea id="partnership-benefits" required></textarea></div><button class="button button-lime" type="submit"><span id="partnership-submit-label">Add Package</span> <span>↗</span></button><button class="button button-ghost clear-button" id="partnership-clear" type="button">Clear</button></form><div id="partnership-list" class="partnership-list"></div></section></div>
       <div class="admin-view" id="media-view"><section class="admin-card" id="gallery-manager"><h2>Event Gallery Manager</h2><p class="muted">Choose an event, then upload images for the matching conference gallery. Changes sync to the website when you are signed in and the server is available.</p><div class="field" style="max-width:520px;margin-top:22px"><label for="gallery-event">Choose event</label><select id="gallery-event"></select></div><div class="upload-box"><input id="gallery-upload" type="file" accept="image/*" multiple><p class="muted" style="margin-top:10px">Upload images for the selected event</p></div><div id="gallery-preview" class="gallery-preview"></div></section></div>
       <div class="admin-view" id="enquiries-view"><section class="admin-card" id="inquiry-manager"><h2>Contact Enquiries</h2><div class="inquiry-list"></div></section></div>
       <div class="admin-view" id="settings-view"><section class="admin-card"><h2>Settings</h2><p class="muted">Website content is saved to the server so changes are shared with visitors. Use the admin controls to update content, conferences, media, and enquiries.</p><button class="button button-ghost admin-logout" id="settings-logout" type="button">Sign Out</button></section></div>
     </main>
   </div>
-  <script src="api.js?v=20260928"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="api.js?v=20260928-php"></script>
   <script>
     // Pull the latest content from the backend into localStorage first, then
     // load the admin scripts in order (admin.js reads content synchronously).

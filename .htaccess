@@ -1,0 +1,13 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,END,NC]
+  RewriteRule ^(?:backend|docs|frontend)(?:/|$) - [F,END,NC]
+  RewriteRule ^README\.md$ - [F,END,NC]
+  RewriteRule ^$ frontend/index.html [END]
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [END]
+  RewriteRule ^(.+)$ frontend/$1 [END]
+</IfModule>

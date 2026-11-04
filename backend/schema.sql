@@ -1,12 +1,7 @@
 -- ============================================================
---  NVS International Services — database schema
---  Run this whole script once in MySQL Workbench
---  (File ▸ Open SQL Script ▸ select this file ▸ ⚡ Execute)
+--  NVS International Services — MySQL schema for PHP/PDO
+--  Select the target database in MySQL Workbench or phpMyAdmin first.
 -- ============================================================
-
-CREATE DATABASE IF NOT EXISTS nvs_international
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE nvs_international;
 
 -- Holds the whole editable site content as one JSON document.
 -- The website merges this over its built-in defaults, exactly the

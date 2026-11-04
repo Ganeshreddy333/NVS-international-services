@@ -1,7 +1,5 @@
-const adminSessionKey = 'nvs-admin-session';
-
 function hasAdminSession() {
-  return sessionStorage.getItem(adminSessionKey) === 'authenticated';
+  return Boolean(window.NVS_API && NVS_API.hasToken());
 }
 
 function showAdminApp() {
@@ -33,7 +31,6 @@ function bindAdminAuthentication() {
         await NVS_API.login(username, password);
         loginError.textContent = '';
         loginForm.reset();
-        sessionStorage.setItem(adminSessionKey, 'authenticated');
         showAdminApp();
         window.dispatchEvent(new Event('admin-authenticated'));
         return;
@@ -46,16 +43,17 @@ function bindAdminAuthentication() {
     loginError.textContent = 'The authentication service is not configured.';
   });
 
-  logoutButton?.addEventListener('click', () => {
-    sessionStorage.removeItem(adminSessionKey);
-    if (window.NVS_API && NVS_API.clearToken) NVS_API.clearToken();
-    showAdminLogin();
-  });
-  settingsLogoutButton?.addEventListener('click', () => {
-    sessionStorage.removeItem(adminSessionKey);
-    if (window.NVS_API && NVS_API.clearToken) NVS_API.clearToken();
-    showAdminLogin();
-  });
+  const logout = async () => {
+    try {
+      await NVS_API.logout();
+      loginError.textContent = '';
+      showAdminLogin();
+    } catch (error) {
+      loginError.textContent = error.message || 'Could not sign out. Please try again.';
+    }
+  };
+  logoutButton?.addEventListener('click', logout);
+  settingsLogoutButton?.addEventListener('click', logout);
 }
 
 bindAdminAuthentication();

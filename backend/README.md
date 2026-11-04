@@ -1,86 +1,55 @@
-# NVS International Services — Backend API
+# PHP and MySQL setup
 
-Express + MySQL backend for the website. It stores the editable site
-content, admin accounts, and visitor enquiries in **your MySQL database**
-(the one you already open in MySQL Workbench) instead of the browser's
-localStorage — so admin edits show up for **every** visitor on every device.
+The website's PHP API is in `frontend/api/`; it runs on the same origin as the static pages. This directory contains the shared MySQL schema and command-line setup/migration scripts.
 
-## What it provides
+## Requirements
 
-| Method | Endpoint              | Access  | Purpose                              |
-|--------|-----------------------|---------|--------------------------------------|
-| GET    | `/api/health`         | public  | Quick "is it running?" check         |
-| POST   | `/api/login`          | public  | Admin login → returns a JWT token    |
-| GET    | `/api/content`        | public  | The site content JSON (for the site) |
-| PUT    | `/api/content`        | admin   | Save site content (admin panel)      |
-| POST   | `/api/inquiries`      | public  | Save a contact-form enquiry          |
-| GET    | `/api/inquiries`      | admin   | List all enquiries                   |
-| DELETE | `/api/inquiries/:id`  | admin   | Delete one enquiry                   |
+- PHP 8.2+
+- PHP extensions: `pdo_mysql` and `dom`
+- MySQL 5.7.8+ or MariaDB with JSON column support
 
-Admin routes require the `Authorization: Bearer <token>` header from `/api/login`.
+## Database and local configuration
 
-## Prerequisites
+1. Create/select the MySQL database in Workbench or hPanel/phpMyAdmin, then run `backend/schema.sql`. It creates the content row, admin table, and enquiry table.
+2. Copy `frontend/api/config.example.php` to `frontend/api/config.php`.
+3. Set the database host, port, name, username, and password in `config.php`. Do not commit this file.
+4. Run `php backend/seed.php` from a private terminal. Enter an admin username and a strong password when prompted. Running it for an existing username updates that account's password.
+5. If the database contains content created by the old backend, run `php backend/migrate-gallery.php` once. It moves embedded base64 gallery images to `frontend/uploads/gallery/` and updates the content JSON. The script is safe to rerun.
 
-- **Node.js 18+** — check with `node -v`
-- **MySQL** running locally (you already have it via MySQL Workbench)
+Both CLI scripts use `frontend/api/config.php` by default. If the repository is deployed into `public_html/`, run them from that repository root. Otherwise, point the scripts at the deployed configuration and gallery directory:
 
-## Setup (one time)
-
-### 1. Create the database and tables (in MySQL Workbench)
-Open `backend/schema.sql` in Workbench
-(**File ▸ Open SQL Script**), then click the ⚡ (Execute) button.
-This creates the `nvs_international` database and its tables.
-
-### 2. Configure the backend
 ```bash
-cd backend
-copy .env.example .env      # Windows (PowerShell/CMD).  macOS/Linux: cp .env.example .env
-```
-Open `.env` and set:
-- `DB_USER` / `DB_PASSWORD` — the same MySQL login you use in Workbench
-- `JWT_SECRET` — a long random string
-  (generate one: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`)
-- `ADMIN_USERNAME` / `ADMIN_PASSWORD` — the admin login you want
-
-### 3. Install and seed
-```bash
-npm install
-npm run seed        # creates your admin user + the content row
+NVS_CONFIG_FILE=/home/ACCOUNT/domains/DOMAIN/public_html/frontend/api/config.php \
+NVS_UPLOAD_DIR=/home/ACCOUNT/domains/DOMAIN/public_html/frontend/uploads/gallery \
+php backend/migrate-gallery.php
 ```
 
-### 4. Run
-```bash
-npm start           # or: npm run dev  (auto-restarts on changes)
-```
-You should see: `NVS API running on http://127.0.0.1:4000`
-Test it: open http://127.0.0.1:4000/api/health → `{"ok":true}`
+Use the same `NVS_CONFIG_FILE` setting with `php backend/seed.php`.
 
-## Connecting the website to this API
+## API endpoints
 
-The front-end client is already written: **`frontend/api.js`**.
-All website pages already load `api.js` before `site.js`, and the admin page
-loads it before `site.js`, `auth.js`, and `admin.js`.
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| GET | `api/session.php` | Public | Initialize session and return CSRF token/authentication state |
+| POST | `api/login.php` | Public + CSRF | Verify admin credentials and start a PHP session |
+| POST | `api/logout.php` | Admin + CSRF | End the PHP session |
+| GET | `api/content.php` | Public | Load shared site content |
+| PUT | `api/content.php` | Admin + CSRF | Save sanitized site content |
+| POST | `api/inquiries.php` | Public + CSRF | Save a contact enquiry |
+| GET | `api/inquiries.php` | Admin | List contact enquiries |
+| DELETE | `api/inquiries.php?id=…` | Admin + CSRF | Delete an enquiry |
+| POST | `api/upload.php` | Admin + CSRF | Validate and store a gallery/editor image |
 
-`api.js` exposes `window.NVS_API` with:
-- `bootstrap()` — pulls `/api/content` into localStorage before the page renders
-  (falls back silently to defaults if the API is offline)
-- `login(username, password)` — stores a JWT for admin saves
-- `saveContent(data)` — admin panel → `PUT /api/content`
-- `postInquiry(inquiry)` — contact form → `POST /api/inquiries`
-- `listInquiries()` / `deleteInquiry(id)` — admin enquiries view
+The API is same-origin and uses PHP session cookies; no JWT, CORS configuration, or Node.js server is required.
 
-These API calls are wired into `site.js`, `admin.js`, and `auth.js`. Admin
-content edits are queued in order to prevent rapid updates from overwriting
-one another. The admin panel reports when a change was saved only locally or
-could not be synced to the server.
+## Local server
 
-## Notes
+From the repository root, run `php -S 127.0.0.1:8002 -t frontend` and visit `http://127.0.0.1:8002/`. Do not use a static-only server for PHP endpoints.
 
-- **Gallery images** are stored (base64) inside the content JSON, same as before.
-  If large images fail to save, raise MySQL's `max_allowed_packet`
-  (e.g. `SET GLOBAL max_allowed_packet = 64*1024*1024;`) or store fewer/smaller images.
-- **Passwords** are never stored in plain text — only bcrypt hashes.
-- **Production**: host MySQL somewhere reachable (e.g. Railway/PlanetScale/RDS),
-  deploy this API (Render/Railway/a VM), set `CORS_ORIGIN` to your live site URL,
-  and set `window.NVS_API_BASE` on the site to the deployed API URL.
-- Never commit `.env` (already in `.gitignore`).
+## Hosting notes
+
+- Deploy the repository root to `public_html/`; the root `.htaccess` routes public paths into `frontend/` and blocks direct access to private repository folders.
+- Keep `frontend/api/config.php` private; the included `frontend/.htaccess` denies direct requests to it and shared API internals.
+- Keep `frontend/uploads/.htaccess`; it prevents uploaded files from being executed as scripts.
+- Ensure `frontend/uploads/gallery/` is writable by the PHP process.
+- For Hostinger, select PHP 8.2+ in hPanel and confirm `pdo_mysql` and `dom` are enabled.

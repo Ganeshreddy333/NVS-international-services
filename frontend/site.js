@@ -1437,20 +1437,79 @@ let siteDataSaveQueue = Promise.resolve();
 
 function saveSiteData(data) {
   const serialized = JSON.stringify(data);
-  localStorage.setItem('nvs-site-data', serialized);
 
   if (!window.NVS_API || !NVS_API.hasToken || !NVS_API.hasToken()) {
-    return Promise.resolve('local');
+    return Promise.reject(new Error('Please sign in before saving website changes.'));
   }
 
   const snapshot = JSON.parse(serialized);
   const request = siteDataSaveQueue.then(() => NVS_API.saveContent(snapshot));
   siteDataSaveQueue = request.catch(() => {});
-  return request.then(() => 'server', () => 'failed');
+  return request.then(() => {
+    try {
+      localStorage.setItem('nvs-site-data', serialized);
+    } catch (error) {
+      console.warn('Website changes were saved to the server but could not be cached in this browser.', error);
+    }
+    return 'server';
+  });
 }
 
 function escapeHtml(value = '') {
   return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+}
+
+function sanitizeRichHtml(value = '') {
+  const template = document.createElement('template');
+  template.innerHTML = String(value);
+  const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'A', 'SPAN', 'IMG']);
+  const dangerousTags = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'FORM']);
+  const clean = (parent) => {
+    [...parent.childNodes].forEach((node) => {
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        if (node.nodeType !== Node.TEXT_NODE) node.remove();
+        return;
+      }
+      if (dangerousTags.has(node.tagName)) {
+        node.remove();
+        return;
+      }
+      if (!allowedTags.has(node.tagName)) {
+        clean(node);
+        node.replaceWith(...node.childNodes);
+        return;
+      }
+      const href = node.tagName === 'A' ? node.getAttribute('href') : '';
+      const src = node.tagName === 'IMG' ? node.getAttribute('src') : '';
+      const alt = node.tagName === 'IMG' ? node.getAttribute('alt') || '' : '';
+      [...node.attributes].forEach((attribute) => node.removeAttribute(attribute.name));
+      if (node.tagName === 'A') {
+        const scheme = href?.match(/^([a-z][a-z0-9+.-]*):/i)?.[1]?.toLowerCase();
+        if (href && !/[\u0000-\u0020\\]/.test(href) && !href.startsWith('//') && (!scheme || ['http', 'https', 'mailto', 'tel'].includes(scheme))) {
+          node.setAttribute('href', href);
+          if (/^https?:/i.test(href)) node.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+      if (node.tagName === 'IMG') {
+        if (src && /^\/?uploads\/gallery\/[a-f0-9]+\.(?:jpg|png|gif|webp)$/i.test(src)) {
+          node.setAttribute('src', src.startsWith('/') ? src : `/${src}`);
+          node.setAttribute('loading', 'lazy');
+          node.setAttribute('alt', alt);
+        } else {
+          node.remove();
+          return;
+        }
+      }
+      clean(node);
+    });
+  };
+  clean(template.content);
+  return template.innerHTML;
+}
+
+function renderRichContent(value = '') {
+  const text = String(value);
+  return /<[^>]+>/.test(text) ? sanitizeRichHtml(text) : escapeHtml(text);
 }
 
 function stripLabelNumber(value = '') {
@@ -1477,6 +1536,7 @@ function renderInline(text = '') {
 }
 
 function renderParagraphs(body = '') {
+  if (/<[^>]+>/.test(String(body))) return sanitizeRichHtml(body);
   return String(body).split(/\n\s*\n/).map((para) => para.trim()).filter(Boolean).map((para) => `<p>${renderInline(para)}</p>`).join('');
 }
 
@@ -1502,7 +1562,7 @@ function renderBlock(block = {}) {
   html += renderList(block.listStyle, block.listItems);
   html += renderParagraphs(block.bodyAfter);
   if (block.signoff) html += `<p class="about-signoff"><strong>${renderInline(block.signoff.strong)}</strong><span>${renderInline(block.signoff.span)}</span><b>${renderInline(block.signoff.b)}</b></p>`;
-  if (block.button) html += `<p><a class="button button-lime" href="${escapeHtml(block.button.href)}">${renderInline(block.button.label)} <span>↗</span></a></p>`;
+  if (block.button) html += `<p><a class="button button-lime" href="${escapeHtml(safeLink(block.button.href))}">${renderInline(block.button.label)} <span>↗</span></a></p>`;
   return `${html}</article>`;
 }
 
@@ -1511,6 +1571,7 @@ function renderBlocks(sections = []) {
 }
 
 function renderRichBody(body = '') {
+  if (/<[^>]+>/.test(String(body))) return sanitizeRichHtml(body);
   const lines = String(body).split('\n');
   let html = '';
   let bullets = [];
@@ -1533,6 +1594,22 @@ function renderRichBody(body = '') {
   });
   flush();
   return html;
+}
+
+function safeImageUrl(value = '') {
+  const url = String(value);
+  if (/^\/?uploads\/gallery\/[a-f0-9]+\.(?:jpg|png|gif|webp)$/i.test(url)) {
+    return url.startsWith('/') ? url : `/${url}`;
+  }
+  if (/^data:image\/(?:jpeg|png|gif|webp);base64,[a-z0-9+/]+=*$/i.test(url)) return url;
+  return '';
+}
+
+function safeLink(value = '') {
+  const url = String(value).trim();
+  const scheme = url.match(/^([a-z][a-z0-9+.-]*):/i)?.[1]?.toLowerCase();
+  if (!url || /[\u0000-\u0020\\]/.test(url) || url.startsWith('//')) return '#';
+  return !scheme || ['http', 'https', 'mailto', 'tel'].includes(scheme) ? url : '#';
 }
 
 function renderAccordion(sections = []) {
@@ -1631,7 +1708,7 @@ function bindNavigation() {
 }
 
 function conferenceCard(conference) {
-  return `<article class="conference-card ${conference.status === 'previous' ? 'previous-card' : ''}"><div class="date"><b>${escapeHtml(conference.date.split(' ')[0])}</b><span>${escapeHtml(conference.date.split(' ').slice(1).join(' '))}</span></div><div class="conference-info"><p class="tag">${escapeHtml(conference.location)}</p><h3>${escapeHtml(conference.title)}</h3><p>${escapeHtml(conference.description)}</p><p class="theme"><b>Theme:</b> ${escapeHtml(conference.theme)}</p><a class="text-link" href="gallery.html#${escapeHtml(conference.id)}">Event Gallery <span>↗</span></a></div><a class="circle-link" href="gallery.html#${escapeHtml(conference.id)}" aria-label="Open ${escapeHtml(conference.title)} gallery">↗</a></article>`;
+  return `<article class="conference-card ${conference.status === 'previous' ? 'previous-card' : ''}"><div class="date"><b>${escapeHtml(conference.date.split(' ')[0])}</b><span>${escapeHtml(conference.date.split(' ').slice(1).join(' '))}</span></div><div class="conference-info"><p class="tag">${escapeHtml(conference.location)}</p><h3>${escapeHtml(conference.title)}</h3><div>${renderParagraphs(conference.description)}</div><p class="theme"><b>Theme:</b> ${escapeHtml(conference.theme)}</p><a class="text-link" href="gallery.html#${escapeHtml(conference.id)}">Event Gallery <span>↗</span></a></div><a class="circle-link" href="gallery.html#${escapeHtml(conference.id)}" aria-label="Open ${escapeHtml(conference.title)} gallery">↗</a></article>`;
 }
 
 function renderConferences(status) {
@@ -1649,7 +1726,7 @@ function getPageContent(pageKey, fallback = {}) {
 
 function pageIntro(pageKey, number, eyebrow, title, text) {
   const content = getPageContent(pageKey, { eyebrow, title, text });
-  return `<section class="page-hero section-dark"><div class="page-hero-copy"><h1>${escapeHtml(content.title)}</h1><p>${escapeHtml(content.text)}</p></div></section>`;
+  return `<section class="page-hero section-dark"><div class="page-hero-copy"><h1>${escapeHtml(content.title)}</h1>${renderParagraphs(content.text)}</div></section>`;
 }
 
 function renderGallery() {
@@ -1660,7 +1737,7 @@ function renderGallery() {
   const conferences = getSiteData().conferences;
   const blocks = conferences.map((conference) => {
     const images = Array.isArray(conference.images) ? conference.images : [];
-    const gallery = images.length ? `<div class="gallery-side"><div class="gallery-slider-shell"><button class="gallery-control" type="button" data-gallery-previous="${escapeHtml(conference.id)}" aria-label="Previous images">←</button><div class="gallery-grid" data-gallery-track="${escapeHtml(conference.id)}">${images.map((image, index) => `<figure><button class="gallery-image-button" type="button" data-gallery-event="${escapeHtml(conference.id)}" data-gallery-index="${index}" aria-label="Open ${escapeHtml(image.name || 'Gallery image')}"><img src="${image.data}" alt="${escapeHtml(image.name)}" loading="lazy" decoding="async"></button></figure>`).join('')}</div><button class="gallery-control" type="button" data-gallery-next="${escapeHtml(conference.id)}" aria-label="Next images">→</button></div><div class="gallery-dots" data-gallery-dots="${escapeHtml(conference.id)}" aria-label="Gallery position"></div></div>` : `<div class="gallery-empty"><span>EVENT GALLERY</span><strong>Conference images will appear here.</strong><i aria-hidden="true">✳</i></div>`;
+    const gallery = images.length ? `<div class="gallery-side"><div class="gallery-slider-shell"><button class="gallery-control" type="button" data-gallery-previous="${escapeHtml(conference.id)}" aria-label="Previous images">←</button><div class="gallery-grid" data-gallery-track="${escapeHtml(conference.id)}">${images.map((image, index) => `<figure><button class="gallery-image-button" type="button" data-gallery-event="${escapeHtml(conference.id)}" data-gallery-index="${index}" aria-label="Open ${escapeHtml(image.name || 'Gallery image')}"><img src="${safeImageUrl(image.data)}" alt="${escapeHtml(image.name)}" loading="lazy" decoding="async"></button></figure>`).join('')}</div><button class="gallery-control" type="button" data-gallery-next="${escapeHtml(conference.id)}" aria-label="Next images">→</button></div><div class="gallery-dots" data-gallery-dots="${escapeHtml(conference.id)}" aria-label="Gallery position"></div></div>` : `<div class="gallery-empty"><span>EVENT GALLERY</span><strong>Conference images will appear here.</strong><i aria-hidden="true">✳</i></div>`;
     return `<section class="gallery-event${gallery ? ' has-images' : ''}" id="${escapeHtml(conference.id)}"><div class="gallery-event-heading"><p class="tag">${escapeHtml(conference.date)} / ${escapeHtml(conference.status)}</p><div class="gallery-title-row"><h2>${escapeHtml(conference.title)}</h2><span class="gallery-title-separator" aria-hidden="true">|</span><p>${escapeHtml(conference.description)}</p></div></div>${gallery}</section>`;
   }).join('');
   renderShell('gallery-page', 'gallery', `${pageIntro('gallery', '06', 'GALLERY', 'Moments in research', 'A look back at the people, ideas and conversations that bring scientific communities together at NVS events.')}${blocks}<div class="image-lightbox" id="image-lightbox" role="dialog" aria-modal="true" aria-label="Expanded gallery image" aria-hidden="true"><div class="lightbox-overlay-click" aria-hidden="true"></div><button class="lightbox-close" type="button" aria-label="Close expanded image">×</button><div class="lightbox-meta" id="lightbox-counter" aria-live="polite">1 / 1</div><button class="lightbox-nav lightbox-previous" type="button" aria-label="Previous image">←</button><img id="lightbox-image" alt=""><button class="lightbox-nav lightbox-next" type="button" aria-label="Next image">→</button></div>`);
@@ -1677,7 +1754,7 @@ function renderGallery() {
     if (!images.length) return;
     lightboxIndex = (lightboxIndex + images.length) % images.length;
     lightbox.classList.toggle('has-multiple', images.length > 1);
-    lightboxImage.src = images[lightboxIndex].data;
+    lightboxImage.src = safeImageUrl(images[lightboxIndex].data);
     lightboxImage.alt = images[lightboxIndex].name || '';
     if (lightboxCounter) lightboxCounter.textContent = `${lightboxIndex + 1} / ${images.length}`;
   };
@@ -1877,18 +1954,13 @@ function startPage() {
       const form = new FormData(event.currentTarget);
       const formElement = event.currentTarget;
       const inquiry = { name: form.get('name'), email: form.get('email'), phone: form.get('phone'), subject: form.get('subject'), message: form.get('message') };
-      const finish = () => { formElement.reset(); document.querySelector('.form-status').textContent = 'Thank you. Your enquiry has been received.'; };
-      const saveLocally = () => {
-        const updatedData = getSiteData();
-        updatedData.inquiries = updatedData.inquiries || [];
-        updatedData.inquiries.unshift({ id: Date.now(), ...inquiry, date: new Date().toLocaleString() });
-        localStorage.setItem('nvs-site-data', JSON.stringify(updatedData));
-      };
+      const status = document.querySelector('.form-status');
+      const finish = () => { formElement.reset(); status.textContent = 'Thank you. Your enquiry has been received.'; };
       if (window.NVS_API && NVS_API.postInquiry) {
-        NVS_API.postInquiry(inquiry).then(finish).catch(() => { saveLocally(); finish(); });
+        status.textContent = 'Sending your enquiry...';
+        NVS_API.postInquiry(inquiry).then(finish).catch((error) => { status.textContent = error.message || 'Could not send your enquiry. Please try again later.'; });
       } else {
-        saveLocally();
-        finish();
+        status.textContent = 'The enquiry service is unavailable. Please try again later.';
       }
     });
   }
@@ -1900,7 +1972,7 @@ function packageCard(label, price, title, text) {
 
 function partnerCard(partner) {
   const benefits = String(partner.benefits || '').split('\n').filter(Boolean).map((benefit) => `<li>${escapeHtml(benefit)}</li>`).join('');
-  return `<article class="package"><div class="package-top"><span>${escapeHtml(partner.name)}</span><strong>${escapeHtml(partner.price)}</strong></div><h2>${escapeHtml(partner.title)}</h2><p>${escapeHtml(partner.description)}</p><ul>${benefits}</ul><a class="text-link" href="contact.html?partner=${encodeURIComponent(partner.name)}">Become a ${escapeHtml(partner.name.toLowerCase())} <span>↗</span></a></article>`;
+  return `<article class="package"><div class="package-top"><span>${escapeHtml(partner.name)}</span><strong>${escapeHtml(partner.price)}</strong></div><h2>${escapeHtml(partner.title)}</h2><div>${renderParagraphs(partner.description)}</div><ul>${benefits}</ul><a class="text-link" href="contact.html?partner=${encodeURIComponent(partner.name)}">Become a ${escapeHtml(partner.name.toLowerCase())} <span>↗</span></a></article>`;
 }
 
 function renderGeneralPage() {
@@ -1923,6 +1995,7 @@ if (document.body.dataset.page) {
   window.addEventListener('storage', (event) => {
     if (event.key === 'nvs-site-data') window.location.reload();
   });
-  if (window.NVS_API && NVS_API.bootstrap) NVS_API.bootstrap().finally(startPage);
-  else startPage();
+  window.NVS_READY = window.NVS_API && NVS_API.bootstrap
+    ? NVS_API.bootstrap().then(startPage)
+    : Promise.resolve().then(startPage);
 }

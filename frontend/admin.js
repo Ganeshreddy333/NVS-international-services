@@ -14,6 +14,57 @@ const partnershipList = document.querySelector('#partnership-list');
 const pageSectionsBody = document.querySelector('#page-sections-body');
 
 const pageEditorKinds = { about: 'blocks', sponsors: 'blocks', general: 'accordion', home: 'home' };
+let richEditorId = 0;
+
+function syncRichEditors() {
+  if (window.tinymce) tinymce.triggerSave();
+}
+
+function validateRichEditors(form) {
+  syncRichEditors();
+  for (const field of form.querySelectorAll('textarea.rich-editor')) {
+    if ((field.required || field.dataset.richRequired === 'true') && !field.value.trim()) {
+      showMessage('Please complete all required rich-text fields.');
+      window.tinymce?.get(field.id)?.focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+function setRichEditorValue(selector, value) {
+  const field = document.querySelector(selector);
+  if (!field) return;
+  const editor = window.tinymce?.get(field.id);
+  if (editor) editor.setContent(value || '');
+  else field.value = value || '';
+}
+
+function initRichEditors(root = document) {
+  if (!window.tinymce) return;
+  root.querySelectorAll('textarea.rich-editor').forEach((field) => {
+    if (!field.id) field.id = `nvs-rich-editor-${++richEditorId}`;
+    if (tinymce.get(field.id)) return;
+    if (field.required) {
+      field.dataset.richRequired = 'true';
+      field.required = false;
+    }
+    tinymce.init({
+      target: field,
+      menubar: false,
+      branding: false,
+      promotion: false,
+      height: 240,
+      plugins: 'lists link image',
+      toolbar: 'undo redo | blocks | bold italic | bullist numlist | link image',
+      images_upload_handler: async (blobInfo) => {
+        const file = new File([blobInfo.blob()], blobInfo.filename(), { type: blobInfo.blob().type });
+        const result = await NVS_API.uploadImage(file);
+        return result.location;
+      }
+    });
+  });
+}
 
 function makeSectionId() {
   return `sec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -33,10 +84,10 @@ function blockCardSkeleton(index, total) {
     <div class="field"><label>Style</label><select data-field="variant"><option value="">Standard</option><option value="opening">Opening</option><option value="vision">Highlight</option><option value="closing">Closing</option></select></div>
     <div class="field"><label>Kicker / label</label><input data-field="kicker"></div>
     <div class="field"><label>Heading</label><input data-field="heading"></div>
-    <div class="field"><label>Body (leave a blank line between paragraphs, wrap **text** for bold)</label><textarea data-field="body" rows="4"></textarea></div>
+    <div class="field"><label>Body</label><textarea class="rich-editor" data-field="body" rows="4"></textarea></div>
     <div class="field"><label>List style</label><select data-field="listStyle"><option value="none">No list</option><option value="topic">Bullet list</option><option value="definition">Term + description</option></select></div>
     <div class="field"><label>List items (one per line; for Term + description use "Term :: description")</label><textarea data-field="listItems" rows="4"></textarea></div>
-    <div class="field"><label>Extra text after the list (optional)</label><textarea data-field="bodyAfter" rows="2"></textarea></div>
+    <div class="field"><label>Extra text after the list (optional)</label><textarea class="rich-editor" data-field="bodyAfter" rows="2"></textarea></div>
   </article>`;
 }
 
@@ -44,7 +95,7 @@ function accordionCardSkeleton(index, total) {
   return `<article class="page-section-item" data-index="${index}">
     <div class="page-section-head"><strong>Item ${index + 1}</strong><div class="event-actions"><button type="button" data-move-up ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-move-down ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-remove>Delete</button></div></div>
     <div class="field"><label>Title</label><input data-field="heading"></div>
-    <div class="field"><label>Content — start a line with # for a sub-heading, - for a bullet point, leave a blank line between paragraphs, and wrap **text** for bold</label><textarea data-field="body" rows="10"></textarea></div>
+    <div class="field"><label>Content</label><textarea class="rich-editor" data-field="body" rows="10"></textarea></div>
   </article>`;
 }
 
@@ -101,6 +152,7 @@ function fillSectionCard(card, kind, item) {
 }
 
 function collectPageItems(kind) {
+  syncRichEditors();
   return [...pageSectionsBody.querySelectorAll('.page-section-item')].map((card) => {
     const get = (field) => card.querySelector(`[data-field="${field}"]`);
     const value = (field) => (get(field) ? get(field).value : '');
@@ -133,6 +185,7 @@ function persistPageItems(pageKey, kind, items, successMessage = '') {
 }
 
 function renderPageSections() {
+  pageSectionsBody.querySelectorAll('textarea.rich-editor').forEach((field) => window.tinymce?.get(field.id)?.remove());
   const pageKey = contentPage.value;
   const kind = pageEditorKinds[pageKey];
   const notes = {
@@ -151,6 +204,7 @@ function renderPageSections() {
   pageSectionsBody.innerHTML = `<div class="page-sections-head"><h2>Page sections</h2><button class="button button-ghost" type="button" id="add-page-section">Add ${labels[kind]}</button></div><div id="page-sections-list">${items.map((item, index) => skeletonFor(index, items.length)).join('') || `<p class="muted">No ${labels[kind]}s yet. Use "Add ${labels[kind]}".</p>`}</div><button class="button button-lime" type="button" id="save-page-sections">Save page sections <span>↗</span></button>`;
   const cards = [...pageSectionsBody.querySelectorAll('.page-section-item')];
   cards.forEach((card, index) => fillSectionCard(card, kind, items[index]));
+  initRichEditors(pageSectionsBody);
 
   cards.forEach((card, index) => {
     card.querySelector('[data-move-up]')?.addEventListener('click', () => {
@@ -201,6 +255,7 @@ function bindAdminViews() {
 
 function resetPartnershipForm() {
   partnershipForm.reset();
+  setRichEditorValue('#partnership-description', '');
   document.querySelector('#partnership-id').value = '';
   document.querySelector('#partnership-submit-label').textContent = 'Add Package';
 }
@@ -217,6 +272,7 @@ function renderPartnerships() {
     document.querySelector('#partnership-price').value = partner.price;
     document.querySelector('#partnership-title').value = partner.title;
     document.querySelector('#partnership-description').value = partner.description;
+    setRichEditorValue('#partnership-description', partner.description);
     document.querySelector('#partnership-benefits').value = partner.benefits;
     document.querySelector('#partnership-submit-label').textContent = 'Update Package';
     partnershipForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -232,7 +288,7 @@ function fillPageContentForm() {
   const content = getPageContent(contentPage.value);
   document.querySelector('#content-eyebrow').value = content.eyebrow || '';
   document.querySelector('#content-title').value = content.title || '';
-  document.querySelector('#content-text').value = content.text || '';
+  setRichEditorValue('#content-text', content.text);
 }
 
 function formatInquiryDate(inquiry) {
@@ -300,7 +356,7 @@ function saveAdminData(successMessage = '') {
 
 function fillCompanyForm() {
   document.querySelector('#about-title').value = data.about.title;
-  document.querySelector('#about-text').value = data.about.text;
+  setRichEditorValue('#about-text', data.about.text);
   document.querySelector('#email').value = data.contact.email;
   document.querySelector('#phone').value = data.contact.phone;
   document.querySelector('#location').value = data.contact.location;
@@ -310,6 +366,7 @@ function fillCompanyForm() {
 
 function resetConferenceForm() {
   conferenceForm.reset();
+  setRichEditorValue('#conference-description', '');
   document.querySelector('#conference-id').value = '';
   document.querySelector('#conference-submit-label').textContent = 'Add Conference';
 }
@@ -355,7 +412,7 @@ function editConference(id) {
   document.querySelector('#conference-title').value = event.title;
   document.querySelector('#conference-date').value = event.date;
   document.querySelector('#conference-status').value = event.status;
-  document.querySelector('#conference-description').value = event.description;
+  setRichEditorValue('#conference-description', event.description);
   document.querySelector('#conference-location').value = event.location;
   document.querySelector('#conference-theme').value = event.theme;
   document.querySelector('#conference-submit-label').textContent = 'Update Conference';
@@ -372,7 +429,7 @@ function deleteConference(id) {
 
 function renderGalleryPreview() {
   const event = data.conferences.find((item) => item.id === galleryEvent.value);
-  galleryPreview.innerHTML = event?.images.length ? event.images.map((image, index) => `<figure><img src="${image.data}" alt="${escapeHtml(image.name)}"><button type="button" data-image-index="${index}" aria-label="Remove image">×</button></figure>`).join('') : '<p class="muted">No images uploaded for this event yet.</p>';
+  galleryPreview.innerHTML = event?.images.length ? event.images.map((image, index) => `<figure><img src="${safeImageUrl(image.data)}" alt="${escapeHtml(image.name)}"><button type="button" data-image-index="${index}" aria-label="Remove image">×</button></figure>`).join('') : '<p class="muted">No images uploaded for this event yet.</p>';
   galleryPreview.querySelectorAll('[data-image-index]').forEach((button) => button.addEventListener('click', () => {
     event.images.splice(Number(button.dataset.imageIndex), 1);
     saveAdminData('Gallery image removed.');
@@ -383,6 +440,7 @@ function renderGalleryPreview() {
 
 companyForm.addEventListener('submit', (event) => {
   event.preventDefault();
+  if (!validateRichEditors(companyForm)) return;
   data.about.title = document.querySelector('#about-title').value;
   data.about.text = document.querySelector('#about-text').value;
   data.contact.email = document.querySelector('#email').value;
@@ -396,6 +454,7 @@ companyForm.addEventListener('submit', (event) => {
 
 pageContentForm.addEventListener('submit', (event) => {
   event.preventDefault();
+  if (!validateRichEditors(pageContentForm)) return;
   data.pageContent = data.pageContent || {};
   data.pageContent[contentPage.value] = {
     eyebrow: document.querySelector('#content-eyebrow').value,
@@ -407,6 +466,7 @@ pageContentForm.addEventListener('submit', (event) => {
 
 partnershipForm.addEventListener('submit', (event) => {
   event.preventDefault();
+  if (!validateRichEditors(partnershipForm)) return;
   data.partnerships = data.partnerships || [];
   const idField = document.querySelector('#partnership-id');
   const values = { type: document.querySelector('#partnership-type').value, name: document.querySelector('#partnership-name').value, price: document.querySelector('#partnership-price').value, title: document.querySelector('#partnership-title').value, description: document.querySelector('#partnership-description').value, benefits: document.querySelector('#partnership-benefits').value };
@@ -427,6 +487,7 @@ partnershipForm.addEventListener('submit', (event) => {
 
 conferenceForm.addEventListener('submit', (event) => {
   event.preventDefault();
+  if (!validateRichEditors(conferenceForm)) return;
   const idField = document.querySelector('#conference-id');
   const values = { title: document.querySelector('#conference-title').value, date: document.querySelector('#conference-date').value, status: document.querySelector('#conference-status').value, description: document.querySelector('#conference-description').value, location: document.querySelector('#conference-location').value, theme: document.querySelector('#conference-theme').value };
   let successMessage;
@@ -447,32 +508,40 @@ document.querySelector('#cancel-edit').addEventListener('click', resetConference
 document.querySelector('#partnership-clear').addEventListener('click', resetPartnershipForm);
 contentPage.addEventListener('change', () => { fillPageContentForm(); renderPageSections(); });
 galleryEvent.addEventListener('change', renderGalleryPreview);
-galleryUpload.addEventListener('change', (event) => {
+galleryUpload.addEventListener('change', async (event) => {
   const conference = data.conferences.find((item) => item.id === galleryEvent.value);
   if (!conference) return;
-  Array.from(event.target.files).forEach((file) => {
-    const reader = new FileReader();
-    reader.addEventListener('error', () => showMessage(`Could not read ${file.name}.`));
-    reader.addEventListener('load', () => {
+  for (const file of Array.from(event.target.files)) {
+    try {
+      if (file.size > 25 * 1024 * 1024) throw new Error('Choose an image smaller than 25 MB.');
+      const objectUrl = URL.createObjectURL(file);
       const image = new Image();
-      image.addEventListener('error', () => showMessage(`Could not process ${file.name}.`));
-      image.addEventListener('load', () => {
+      await new Promise((resolve, reject) => {
+        image.addEventListener('error', () => reject(new Error(`Could not process ${file.name}.`)), { once: true });
+        image.addEventListener('load', resolve, { once: true });
+        image.src = objectUrl;
+      });
+      URL.revokeObjectURL(objectUrl);
+      const blob = await new Promise((resolve, reject) => {
         const maxDimension = 1600;
         const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
         canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-        const galleryImage = { name: file.name, data: canvas.toDataURL('image/jpeg', 0.82) };
-        conference.images.push(galleryImage);
-        saveAdminData('Gallery image uploaded.');
-        renderGalleryPreview();
-        renderEvents();
+        const context = canvas.getContext('2d');
+        if (!context) return reject(new Error(`Could not process ${file.name}.`));
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((result) => result ? resolve(result) : reject(new Error(`Could not process ${file.name}.`)), 'image/jpeg', 0.82);
       });
-      image.src = reader.result;
-    });
-    reader.readAsDataURL(file);
-  });
+      const storedImage = await NVS_API.uploadImage(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+      conference.images.push({ name: file.name, data: storedImage.location });
+      if (!await saveAdminData('Gallery image uploaded.')) break;
+      renderGalleryPreview();
+      renderEvents();
+    } catch (error) {
+      showMessage(`Could not upload ${file.name}: ${error.message}`);
+    }
+  }
   event.target.value = '';
 });
 
@@ -483,6 +552,7 @@ renderEvents();
 renderInquiries();
 renderPartnerships();
 bindAdminViews();
+initRichEditors();
 
 // After a successful login the API token exists, so reload enquiries from the server.
 window.addEventListener('admin-authenticated', () => renderInquiries());

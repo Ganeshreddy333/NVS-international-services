@@ -1,81 +1,133 @@
-// NVS International Services — front-end API client.
-// Talks to the backend (backend/server.js). Falls back gracefully:
-// if the API is unreachable, the site keeps using localStorage + defaults.
+// Same-origin PHP API client. Admin mutations require a PHP session and CSRF token.
 (function () {
-  // Point this at your backend. Change to your deployed API URL in production.
-  const API_BASE = window.NVS_API_BASE || 'http://localhost:4000';
-  const TOKEN_KEY = 'nvs-admin-token';
   const DATA_KEY = 'nvs-site-data';
+  let csrfToken = '';
+  let authenticated = false;
+  let bootstrapPromise;
 
-  const getToken = () => { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
-  const setToken = (t) => { try { sessionStorage.setItem(TOKEN_KEY, t); } catch (e) {} };
-  const clearToken = () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) {} };
-
-  async function login(username, password) {
-    const res = await fetch(`${API_BASE}/api/login`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+  async function request(url, options = {}) {
+    const response = await fetch(url, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      ...options
     });
-    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Login failed');
-    const out = await res.json();
-    setToken(out.token);
-    return out;
+    if (!response.headers.get('content-type')?.includes('application/json')) {
+      throw new Error('The PHP API did not return JSON. Serve the site with PHP, not a static-only server.');
+    }
+    let payload;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      throw new Error('The PHP API returned invalid JSON.');
+    }
+    if (!response.ok) {
+      throw new Error(payload.error || `Request failed (${response.status})`);
+    }
+    return payload;
   }
 
-  // Pull server content into localStorage so the existing (synchronous)
-  // rendering code can read it as usual. Never throws.
-  async function bootstrap() {
-    try {
-      const res = await fetch(`${API_BASE}/api/content`, { cache: 'no-store' });
-      if (!res.ok) return false;
-      const data = await res.json();
-      if (data && typeof data === 'object') {
-        try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch (e) {}
-      }
-      return true;
-    } catch (e) {
-      return false; // API down → keep whatever localStorage/defaults exist
+  async function refreshSession() {
+    const session = await request('api/session.php');
+    csrfToken = session.csrfToken;
+    authenticated = session.authenticated === true;
+    return session;
+  }
+
+  async function ensureCsrfToken() {
+    if (!csrfToken) await refreshSession();
+  }
+
+  function bootstrap() {
+    if (!bootstrapPromise) {
+      bootstrapPromise = (async () => {
+        try {
+          await refreshSession();
+          const data = await request('api/content.php');
+          if (data && typeof data === 'object' && !Array.isArray(data)) {
+            localStorage.setItem(DATA_KEY, JSON.stringify(data));
+          }
+          return true;
+        } catch (error) {
+          console.error(`Could not load shared website content: ${error.message}`);
+          return false;
+        }
+      })();
     }
+    return bootstrapPromise;
+  }
+
+  async function login(username, password) {
+    await ensureCsrfToken();
+    const result = await request('api/login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ username, password })
+    });
+    csrfToken = result.csrfToken;
+    authenticated = true;
+    return result;
+  }
+
+  async function logout() {
+    await ensureCsrfToken();
+    await request('api/logout.php', {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': csrfToken }
+    });
+    authenticated = false;
+    csrfToken = '';
   }
 
   async function saveContent(data) {
-    const res = await fetch(`${API_BASE}/api/content`, {
+    await ensureCsrfToken();
+    return request('api/content.php', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Could not save to server');
-    return res.json();
   }
 
   async function postInquiry(inquiry) {
-    const res = await fetch(`${API_BASE}/api/inquiries`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await ensureCsrfToken();
+    return request('api/inquiries.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
       body: JSON.stringify(inquiry)
     });
-    if (!res.ok) throw new Error('Could not submit enquiry');
-    return res.json();
   }
 
   async function listInquiries() {
-    const res = await fetch(`${API_BASE}/api/inquiries`, {
-      headers: { Authorization: `Bearer ${getToken()}` }
-    });
-    if (!res.ok) throw new Error('Could not load enquiries');
-    return res.json();
+    return request('api/inquiries.php');
   }
 
   async function deleteInquiry(id) {
-    const res = await fetch(`${API_BASE}/api/inquiries/${id}`, {
-      method: 'DELETE', headers: { Authorization: `Bearer ${getToken()}` }
+    await ensureCsrfToken();
+    return request(`api/inquiries.php?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'X-CSRF-Token': csrfToken }
     });
-    if (!res.ok) throw new Error('Could not delete enquiry');
-    return res.json();
+  }
+
+  async function uploadImage(file) {
+    await ensureCsrfToken();
+    const body = new FormData();
+    body.append('file', file, file.name);
+    return request('api/upload.php', {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': csrfToken },
+      body
+    });
   }
 
   window.NVS_API = {
-    API_BASE, bootstrap, login, saveContent,
-    postInquiry, listInquiries, deleteInquiry,
-    getToken, setToken, clearToken, hasToken: () => !!getToken()
+    bootstrap,
+    login,
+    logout,
+    saveContent,
+    postInquiry,
+    listInquiries,
+    deleteInquiry,
+    uploadImage,
+    hasToken: () => authenticated
   };
 })();
