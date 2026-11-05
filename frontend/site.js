@@ -1694,7 +1694,6 @@ function renderShell(page, activePage, content) {
   document.querySelector('.footer-links')?.insertAdjacentHTML('beforeend', '<a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a>');
   mountWhatsAppButton();
   bindNavigation();
-  if (page === 'partners-page') window.addEventListener('storage', () => window.location.reload());
 }
 
 function bindNavigation() {
@@ -1908,9 +1907,6 @@ function startPage() {
   const page = document.body.dataset.page;
   if (page === 'gallery') {
     renderGallery();
-    window.addEventListener('storage', (event) => {
-      if (event.key === 'nvs-site-data') renderGallery();
-    });
   }
   if (page === 'about') {
     renderShell('about-page', 'about', aboutPageContent());
@@ -1991,10 +1987,29 @@ function renderLegalPage(page) {
   renderShell('legal-page', '', `<section class="page-hero section-dark"><div class="page-hero-copy"><h1>${escapeHtml(title)}</h1></div></section><section class="page-section section-light"><article class="details-body legal-policy">${renderRichBody(section?.body || '')}</article></section>`);
 }
 
-if (document.body.dataset.page) {
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'nvs-site-data') window.location.reload();
+function refreshRenderedContent() {
+  const page = document.body.dataset.page;
+  const formValues = page === 'contact'
+    ? [...document.querySelectorAll('#contact-form input, #contact-form textarea, #contact-form select')]
+      .filter((field) => field.id)
+      .map((field) => ({ id: field.id, value: field.value }))
+    : [];
+
+  if (page) startPage();
+  else window.applyHomeData?.();
+
+  formValues.forEach(({ id, value }) => {
+    const field = document.getElementById(id);
+    if (field) field.value = value;
   });
+}
+
+window.addEventListener('nvs-content-updated', refreshRenderedContent);
+window.addEventListener('storage', (event) => {
+  if (event.key === 'nvs-site-data') refreshRenderedContent();
+});
+
+if (document.body.dataset.page) {
   window.NVS_READY = window.NVS_API && NVS_API.bootstrap
     ? NVS_API.bootstrap().then(startPage)
     : Promise.resolve().then(startPage);

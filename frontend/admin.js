@@ -249,8 +249,10 @@ function bindAdminViews() {
     event.preventDefault();
     showView(tab.dataset.adminView);
     window.history.replaceState(null, '', `#${tab.dataset.adminView}`);
+    if (tab.dataset.adminView === 'settings-view') loadAuditLog();
   }));
   showView(window.location.hash.slice(1) || 'content-view');
+  if (window.location.hash === '#settings-view') loadAuditLog();
 }
 
 function resetPartnershipForm() {
@@ -327,6 +329,23 @@ function renderInquiries() {
     });
   } else {
     paint(data.inquiries || [], false);
+  }
+}
+
+async function loadAuditLog() {
+  const container = document.querySelector('#admin-audit-log');
+  if (!container || !window.NVS_API || !NVS_API.hasToken()) return;
+
+  container.innerHTML = '<p class="muted">Loading activity…</p>';
+  try {
+    const entries = await NVS_API.listAuditLog();
+    container.innerHTML = entries.length ? entries.map((entry) => {
+      const changes = entry.changes || {};
+      return `<article class="admin-event"><div><strong>${escapeHtml(entry.action)}</strong><small>${escapeHtml(entry.admin_username)} · ${escapeHtml(new Date(entry.created_at).toLocaleString())} · ${escapeHtml(Object.keys(changes).join(', '))}</small><details><summary>View before/after values</summary><pre>${escapeHtml(JSON.stringify(changes, null, 2))}</pre></details></div></article>`;
+    }).join('') : '<p class="muted">No admin content changes have been recorded yet.</p>';
+  } catch (error) {
+    container.innerHTML = '<p class="muted">Could not load admin activity.</p>';
+    showMessage(`Could not load admin activity: ${error.message}`);
   }
 }
 
@@ -506,6 +525,7 @@ conferenceForm.addEventListener('submit', (event) => {
 
 document.querySelector('#cancel-edit').addEventListener('click', resetConferenceForm);
 document.querySelector('#partnership-clear').addEventListener('click', resetPartnershipForm);
+document.querySelector('#refresh-audit-log').addEventListener('click', loadAuditLog);
 contentPage.addEventListener('change', () => { fillPageContentForm(); renderPageSections(); });
 galleryEvent.addEventListener('change', renderGalleryPreview);
 galleryUpload.addEventListener('change', async (event) => {
@@ -555,4 +575,7 @@ bindAdminViews();
 initRichEditors();
 
 // After a successful login the API token exists, so reload enquiries from the server.
-window.addEventListener('admin-authenticated', () => renderInquiries());
+window.addEventListener('admin-authenticated', () => {
+  renderInquiries();
+  if (window.location.hash === '#settings-view') loadAuditLog();
+});

@@ -85,6 +85,20 @@ function require_admin(): void
     }
 }
 
+function record_admin_activity(PDO $connection, string $action, array $changes): void
+{
+    $statement = $connection->prepare(
+        'INSERT INTO admin_audit_log (admin_id, admin_username, action, changes)
+         VALUES (:admin_id, :admin_username, :action, :changes)'
+    );
+    $statement->execute([
+        'admin_id' => $_SESSION['admin_id'] ?? null,
+        'admin_username' => $_SESSION['admin_username'] ?? 'unknown',
+        'action' => $action,
+        'changes' => json_encode($changes, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+    ]);
+}
+
 function database(): PDO
 {
     static $connection;

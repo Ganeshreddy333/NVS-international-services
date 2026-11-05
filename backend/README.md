@@ -10,7 +10,7 @@ The website's PHP API is in `frontend/api/`; it runs on the same origin as the s
 
 ## Database and local configuration
 
-1. Create/select the MySQL database in Workbench or hPanel/phpMyAdmin, then run `backend/schema.sql`. It creates the content row, admin table, and enquiry table.
+1. Create/select the MySQL database in Workbench or hPanel/phpMyAdmin, then run `backend/schema.sql`. It creates the content row, admin, audit-log, and enquiry tables. Re-running it on an existing database safely creates the audit table if needed.
 2. Copy `frontend/api/config.example.php` to `frontend/api/config.php`.
 3. Set the database host, port, name, username, and password in `config.php`. Do not commit this file.
 4. Run `php backend/seed.php` from a private terminal. Enter an admin username and a strong password when prompted. Running it for an existing username updates that account's password.
@@ -35,12 +35,15 @@ Use the same `NVS_CONFIG_FILE` setting with `php backend/seed.php`.
 | POST | `api/logout.php` | Admin + CSRF | End the PHP session |
 | GET | `api/content.php` | Public | Load shared site content |
 | PUT | `api/content.php` | Admin + CSRF | Save sanitized site content |
+| GET | `api/audit.php` | Admin | List the 50 most recent content changes |
 | POST | `api/inquiries.php` | Public + CSRF | Save a contact enquiry |
 | GET | `api/inquiries.php` | Admin | List contact enquiries |
 | DELETE | `api/inquiries.php?id=…` | Admin + CSRF | Delete an enquiry |
 | POST | `api/upload.php` | Admin + CSRF | Validate and store a gallery/editor image |
 
 The API is same-origin and uses PHP session cookies; no JWT, CORS configuration, or Node.js server is required.
+
+Public content responses include an ETag. Frontend pages revalidate it every 10 seconds (and when a background tab becomes active), download content only after a change, and update the rendered page automatically. Updates made in another tab are also applied through the browser storage event. Admin content updates and enquiry deletions are written to `admin_audit_log` in the same transaction and can be reviewed in Admin > Settings.
 
 ## Local server
 

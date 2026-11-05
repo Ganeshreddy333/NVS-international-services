@@ -20,6 +20,17 @@ CREATE TABLE IF NOT EXISTS admin_users (
   created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Tracks admin content changes and their before/after values.
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  admin_id        INT,
+  admin_username  VARCHAR(100) NOT NULL,
+  action          VARCHAR(100) NOT NULL,
+  changes         JSON NOT NULL,
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_admin_audit_log_created_at (created_at)
+);
+
 -- Contact-form / sponsor enquiries submitted by visitors.
 CREATE TABLE IF NOT EXISTS inquiries (
   id         BIGINT AUTO_INCREMENT PRIMARY KEY,

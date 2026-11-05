@@ -52,10 +52,24 @@ if ($method === 'DELETE') {
         respond(['error' => 'A valid enquiry id is required.'], 400);
     }
     try {
-        $statement = database()->prepare('DELETE FROM inquiries WHERE id = :id');
-        $statement->execute(['id' => $id]);
+        $connection = database();
+        $connection->beginTransaction();
+        $lookup = $connection->prepare('SELECT id FROM inquiries WHERE id = :id FOR UPDATE');
+        $lookup->execute(['id' => $id]);
+        $existing = $lookup->fetch();
+        if ($existing) {
+            $statement = $connection->prepare('DELETE FROM inquiries WHERE id = :id');
+            $statement->execute(['id' => $id]);
+            record_admin_activity($connection, 'inquiry.delete', [
+                'inquiry' => ['before' => ['id' => (int)$id], 'after' => null],
+            ]);
+        }
+        $connection->commit();
         respond(['ok' => true]);
     } catch (Throwable $error) {
+        if (isset($connection) && $connection->inTransaction()) {
+            $connection->rollBack();
+        }
         error_log('NVS inquiry delete failed: ' . $error->getMessage());
         respond(['error' => 'Could not delete the enquiry.'], 500);
     }
