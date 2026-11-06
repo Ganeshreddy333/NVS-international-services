@@ -192,13 +192,8 @@ function normalize_partnership_version(mixed $value): ?array
         'introSubheading' => 300,
         'introDescription' => 10000,
         'supportingText' => 10000,
-        'ctaLabel' => 160,
-        'ctaUrl' => 2048,
     ] as $key => $limit) {
         $version[$key] = partnership_string($value[$key] ?? '', $key, $limit);
-    }
-    if ($version['ctaUrl'] !== '' && !safe_link($version['ctaUrl'])) {
-        respond(['error' => 'The partnership call-to-action URL is invalid.'], 400);
     }
     $textOrder = $value['textOrder'] ?? ['title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'];
     $allowedTextOrder = ['title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'];

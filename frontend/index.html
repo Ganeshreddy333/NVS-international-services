@@ -34,7 +34,6 @@
   <link rel="stylesheet" href="styles.css?v=20260928-3">
   <link rel="stylesheet" href="pages.css?v=20261012-whatsapp">
   <link rel="stylesheet" href="home.css?v=20261031-9">
-  <link rel="stylesheet" href="partnership.css?v=20261106-cms">
   <link rel="stylesheet" href="palette.css?v=20261101-contact-space-v2">
   <script type="application/ld+json">
   {
@@ -100,7 +99,10 @@
       <div class="home-content-heading"><div><div class="home-content-kicker">UPCOMING PROGRAM</div><h2>Find a conference to <em>join.</em></h2></div><a class="home-content-link" href="conferences.html">All conferences <span>↗</span></a></div>
       <div class="home-upcoming-list" id="home-upcoming-list"><p>Loading upcoming conferences…</p></div>
     </section>
-    <div id="home-partnership-mount" hidden></div>
+    <section class="company-partners home-content-section">
+      <div class="home-partner-copy"><div class="home-content-kicker">PARTNER WITH NVS</div><h2>Bring your organization closer to the <em>research community.</em></h2><p>Sponsorship and exhibition opportunities can help showcase your work, build visibility, and connect with conference participants.</p><a class="home-content-button" href="sponsors.html">Sponsorship &amp; exhibiting <span>↗</span></a></div>
+      <div class="home-principles"><span>OUR COMMITMENTS</span><p>Professionalism</p><p>Transparency</p><p>Quality</p><p>Collaboration</p></div>
+    </section>
     <section class="company-contact home-content-section">
       <div><div class="home-content-kicker">CONTACT NVS</div><h2>Questions about an event or partnership?</h2><p>Contact our team for conference, participation, sponsorship, or general enquiries.</p></div>
       <div class="home-contact-card"><a href="mailto:info@nvsinternationalservices.com"><small>EMAIL</small>info@nvsinternationalservices.com</a><a href="tel:+919505811873"><small>PHONE</small>+91 9505811873</a><p><small>LOCATION</small>Dilshuknagar, Hyderabad, India</p></div>
@@ -110,7 +112,7 @@
   <script src="api.js?v=20261106-partnership-cms"></script>
   <script src="site.js?v=20261106-partnership-cms"></script>
   <script>window.addEventListener('storage',event=>{if(event.key==='nvs-site-data')window.location.reload();});</script>
-  <script>const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.main-nav');toggle.addEventListener('click',()=>{const open=nav.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});function applyHomeData(){const home=getSiteData().pageContent?.home;if(home){if(home.eyebrow!=null)document.querySelector('#home-eyebrow').textContent=home.eyebrow;if(home.title!=null)document.querySelector('#home-title').textContent=home.title;if(home.text!=null)document.querySelector('#home-text').innerHTML=renderRichContent(home.text);}const homeUpcoming=document.querySelector('#home-upcoming-list');if(homeUpcoming){const upcoming=getSiteData().conferences.filter(conference=>conference.status==='upcoming').slice(0,3);homeUpcoming.innerHTML=upcoming.length?upcoming.map(conferenceCard).join(''):'<p>No upcoming conferences are listed at this time.</p>';}const partnershipMount=document.querySelector('#home-partnership-mount');if(partnershipMount){partnershipMount.innerHTML=renderPartnershipSection(getSiteData().partnershipSection);partnershipMount.hidden=!partnershipMount.innerHTML;}mountWhatsAppButton();mountLinkedInLink();}(window.NVS_API&&NVS_API.bootstrap?NVS_API.bootstrap():Promise.resolve()).then(applyHomeData);</script>
+  <script>const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.main-nav');toggle.addEventListener('click',()=>{const open=nav.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});function applyHomeData(){const home=getSiteData().pageContent?.home;if(home){if(home.eyebrow!=null)document.querySelector('#home-eyebrow').textContent=home.eyebrow;if(home.title!=null)document.querySelector('#home-title').textContent=home.title;if(home.text!=null)document.querySelector('#home-text').innerHTML=renderRichContent(home.text);}const homeUpcoming=document.querySelector('#home-upcoming-list');if(homeUpcoming){const upcoming=getSiteData().conferences.filter(conference=>conference.status==='upcoming').slice(0,3);homeUpcoming.innerHTML=upcoming.length?upcoming.map(conferenceCard).join(''):'<p>No upcoming conferences are listed at this time.</p>';}mountWhatsAppButton();mountLinkedInLink();}(window.NVS_API&&NVS_API.bootstrap?NVS_API.bootstrap():Promise.resolve()).then(applyHomeData);</script>
   <script>document.querySelector('.footer-links')?.insertAdjacentHTML('beforeend', '<a href="privacy-policy.html">Privacy Policy</a><a href="terms-and-conditions.html">Terms &amp; Conditions</a>');</script>
 </body>
 </html>

@@ -1631,7 +1631,7 @@ function renderPartnershipSection(section, preview = false) {
         .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0))
         .filter((partner) => safeImageUrl(partner.image || '') || String(partner.name || '').trim() || String(partner.description || '').trim());
       if (!partners.length && !String(category.description || '').trim()) return '';
-      return `<section class="partnership-category"><div class="partnership-category-heading"><h3>${escapeHtml(category.name || '')}</h3>${category.description ? `<div class="partnership-category-description">${renderRichBody(category.description)}</div>` : ''}</div>${partners.length ? `<div class="partnership-logo-grid">${partners.map((partner) => {
+      return `<section class="partnership-category sponsor-card13-category"><h3 class="sponsor-subhead">${escapeHtml(category.name || '')}</h3>${category.description ? `<div class="partnership-category-description">${renderRichBody(category.description)}</div>` : ''}${partners.length ? `<div class="partnership-logo-grid">${partners.map((partner) => {
         const image = safeImageUrl(partner.image || '');
         const link = safePartnerWebsite(partner.websiteUrl || '');
         const logo = image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(partner.name || '')}" loading="lazy" decoding="async">` : '';
@@ -1650,26 +1650,22 @@ function renderPartnershipSection(section, preview = false) {
 
   const textBlocks = {
     title: section.title ? `<h2 class="partnership-main-title">${escapeHtml(section.title)}</h2>` : '',
-    introHeading: section.introHeading ? `<h3 class="partnership-intro-heading">${escapeHtml(section.introHeading)}</h3>` : '',
+    introHeading: section.introHeading ? `<p class="sponsor-card13-subheading">${escapeHtml(section.introHeading)}</p>` : '',
     introSubheading: section.introSubheading ? `<p class="partnership-intro-subheading">${escapeHtml(section.introSubheading)}</p>` : '',
     introDescription: section.introDescription ? `<div class="partnership-introduction">${renderRichBody(section.introDescription)}</div>` : '',
     supportingText: section.supportingText ? `<div class="partnership-supporting-text">${renderRichBody(section.supportingText)}</div>` : ''
   };
-  const defaultTextOrder = ['title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'];
+  const defaultTextOrder = ['introHeading', 'introSubheading', 'introDescription', 'supportingText'];
   const textOrder = (Array.isArray(section.textOrder) ? section.textOrder : defaultTextOrder)
     .filter((key, index, order) => Object.hasOwn(textBlocks, key) && order.indexOf(key) === index);
   defaultTextOrder.forEach((key) => {
     if (!textOrder.includes(key)) textOrder.push(key);
   });
-  const intro = textOrder
-    .some((key) => String(section[key] || '').trim());
+  const intro = String(section.title || '').trim() !== ''
+    || textOrder.some((key) => String(section[key] || '').trim() !== '');
   if (!intro && !categories && !images) return '';
-  const ctaUrl = safeLink(section.ctaUrl || '');
-  const cta = section.ctaLabel && ctaUrl !== '#'
-    ? `<a class="home-content-button partnership-cta" href="${escapeHtml(ctaUrl)}">${escapeHtml(section.ctaLabel)} <span>↗</span></a>`
-    : '';
-
-  return `<section class="home-content-section home-partnership${preview ? ' partnership-preview-content' : ''}"${preview ? '' : ' id="home-partnership-section"'}><div class="home-content-kicker">${escapeHtml(section.eyebrow || 'PARTNERSHIP / 13')}</div>${textOrder.map((key) => textBlocks[key]).join('')}${categories ? `<div class="partnership-categories">${categories}</div>` : ''}${images ? `<div class="partnership-extra-images">${images}</div>` : ''}${cta}</section>`;
+  const bodyOrder = textOrder.filter((key) => key !== 'title');
+  return `<section class="sponsor-section sponsor-card13${preview ? ' partnership-preview-content' : ''}" id="sponsor-section-13"><div class="sponsor-section-head"><span>${escapeHtml(section.eyebrow || 'PARTNERSHIP / 13')}</span>${section.title ? `<h2>${escapeHtml(section.title)}</h2>` : ''}</div>${bodyOrder.map((key) => textBlocks[key]).join('')}${categories ? `<div class="partnership-categories">${categories}</div>` : ''}${images ? `<div class="partnership-extra-images">${images}</div>` : ''}</section>`;
 }
 
 function renderAccordion(sections = []) {
@@ -1960,7 +1956,19 @@ function aboutPageContent() {
 }
 
 function partnershipPageContent() {
-  return window.NVS_SPONSORSHIP_CONTENT || '<section class="page-section"><h1>Sponsorship &amp; Exhibition</h1><p>The sponsorship information could not be loaded. Please refresh the page.</p></section>';
+  const markup = window.NVS_SPONSORSHIP_CONTENT || '<section class="page-section"><h1>Sponsorship &amp; Exhibition</h1><p>The sponsorship information could not be loaded. Please refresh the page.</p></section>';
+  const template = document.createElement('template');
+  template.innerHTML = markup;
+  const card = template.content.querySelector('#sponsor-section-13');
+  if (card) {
+    const dynamicCard = renderPartnershipSection(getSiteData().partnershipSection);
+    if (dynamicCard) card.outerHTML = dynamicCard;
+    else {
+      card.replaceChildren();
+      card.hidden = true;
+    }
+  }
+  return template.innerHTML;
 }
 
 function startPage() {

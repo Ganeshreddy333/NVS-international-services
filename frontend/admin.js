@@ -19,7 +19,6 @@ const pageSectionsBody = document.querySelector('#page-sections-body');
 
 const pageEditorKinds = { about: 'blocks', sponsors: 'blocks', general: 'accordion', home: 'home' };
 const partnershipTextLabels = {
-  title: 'Main heading',
   introHeading: 'Intro heading',
   introSubheading: 'Intro subheading',
   introDescription: 'Introductory description',
@@ -47,8 +46,6 @@ function newPartnershipDraft() {
     textOrder: Object.keys(partnershipTextLabels),
     introDescription: 'NVS International Services appreciates the organizations and institutions that support our conferences and contribute to scientific exchange, academic collaboration, professional development, and technological innovation.\n\nWe value our relationships with companies, universities, research institutions, publishers, professional associations, and industry partners.',
     supportingText: '',
-    ctaLabel: 'Sponsorship & exhibiting',
-    ctaUrl: 'sponsors.html',
     categories: categories.map((name, index) => ({
       id: partnershipId('category'),
       name,
@@ -110,7 +107,7 @@ function renderPartnershipCategory(category, index, total) {
 function renderPartnershipCms() {
   const section = ensurePartnershipSection();
   const draft = section.draft;
-  const fields = ['eyebrow', 'title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText', 'ctaLabel', 'ctaUrl'];
+  const fields = ['eyebrow', 'title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'];
   fields.forEach((key) => {
     const field = partnershipCmsForm.querySelector(`[data-partnership-field="${key}"]`);
     if (field) field.value = draft[key] || '';
@@ -129,7 +126,7 @@ function renderPartnershipCms() {
 function collectPartnershipDraft() {
   const section = ensurePartnershipSection();
   const draft = { ...section.draft };
-  ['eyebrow', 'title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText', 'ctaLabel', 'ctaUrl'].forEach((key) => {
+  ['eyebrow', 'title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'].forEach((key) => {
     draft[key] = partnershipCmsForm.querySelector(`[data-partnership-field="${key}"]`).value;
   });
   draft.textOrder = [...partnershipTextOrderEditor.querySelectorAll('[data-text-order-item]')].map((item) => item.dataset.textOrderItem);
@@ -578,7 +575,7 @@ partnershipCmsForm.addEventListener('change', async (event) => {
 document.querySelector('#partnership-preview-button').addEventListener('click', () => {
   const draft = collectPartnershipDraft();
   const previewWrap = document.querySelector('#partnership-preview-wrap');
-  document.querySelector('#partnership-preview').innerHTML = renderPartnershipSection(draft, true)
+  document.querySelector('#partnership-preview').innerHTML = `<div class="partners-page">${renderPartnershipSection(draft, true)}</div>`
     || '<p class="muted">Add partnership content to preview the card.</p>';
   previewWrap.hidden = false;
 });
