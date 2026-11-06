@@ -40,7 +40,7 @@
   <div id="admin-app" class="is-hidden">
     <nav class="admin-tabs" aria-label="Admin sections">
       <a class="active" href="#content-view" data-admin-view="content-view">Content</a>
-      <a href="#content-view" data-general-manager>General Information</a>
+      <a href="#general-view" data-admin-view="general-view">General Information</a>
       <a href="#information-view" data-admin-view="information-view">Website Information</a>
       <a href="#conference-view" data-admin-view="conference-view">Conferences</a>
       <a href="#partnership-view" data-admin-view="partnership-view">Partnership / 13</a>
@@ -84,6 +84,23 @@
             <div class="field"><label for="location">Location</label><input id="location" required></div>
             <button class="button button-lime" type="submit">Save Company Details <span>↗</span></button>
           </form>
+        </section>
+      </div>
+      <div class="admin-view" id="general-view">
+        <section class="admin-card recruitment-manager">
+          <h2>General Information Management</h2>
+          <p class="muted">Create, update, order, preview, publish, unpublish, or delete topics displayed on the General Information page.</p>
+          <form id="general-topic-form">
+            <input type="hidden" id="general-topic-id">
+            <div class="field"><label for="general-topic-title">Topic title</label><input id="general-topic-title" required maxlength="240"></div>
+            <div class="field"><label for="general-topic-description">Topic description (optional)</label><textarea id="general-topic-description" rows="2" maxlength="2000"></textarea></div>
+            <div class="field"><label for="general-topic-body">Detailed content</label><textarea id="general-topic-body" rows="10" maxlength="100000"></textarea></div>
+            <div class="field"><label for="general-topic-resources">Supporting resource links (optional, one URL per line)</label><textarea id="general-topic-resources" rows="3" placeholder="https://example.org/document.pdf"></textarea></div>
+            <div class="recruitment-form-actions"><button class="button button-ghost" type="button" id="general-topic-preview-button">Preview</button><button class="button button-ghost" type="submit" name="general-topic-action" value="draft">Save draft</button><button class="button button-lime" type="submit" name="general-topic-action" value="publish">Publish topic <span>↗</span></button><button class="button button-ghost" type="button" id="general-topic-clear-button">Add new topic</button></div>
+          </form>
+          <div id="general-topic-preview" class="recruitment-preview" hidden></div>
+          <h3>Topics</h3>
+          <div id="general-topic-list" class="recruitment-admin-list"></div>
         </section>
       </div>
       <div class="admin-view" id="conference-view">
@@ -217,7 +234,7 @@
     </main>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="api.js?v=20261106-general-topics"></script>
+  <script src="api.js?v=20261106-general-manager"></script>
   <script>
     // Load public content first, then fetch the private admin snapshot if this session is authenticated.
     (async () => {
@@ -229,7 +246,7 @@
           window.NVS_ADMIN_CONTENT_ERROR = error.message;
         }
       }
-      ['site.js?v=20261106-general-topics', 'auth.js?v=20260928-api', 'admin.js?v=20261106-general-topics'].reduce(
+      ['site.js?v=20261106-general-manager', 'auth.js?v=20260928-api', 'admin.js?v=20261106-general-manager'].reduce(
         (chain, src) => chain.then(() => new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;

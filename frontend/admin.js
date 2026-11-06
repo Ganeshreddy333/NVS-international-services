@@ -19,6 +19,9 @@ const pageSectionsBody = document.querySelector('#page-sections-body');
 const recruitmentForm = document.querySelector('#recruitment-form');
 const recruitmentList = document.querySelector('#recruitment-list');
 const recruitmentPreview = document.querySelector('#recruitment-preview');
+const generalTopicForm = document.querySelector('#general-topic-form');
+const generalTopicList = document.querySelector('#general-topic-list');
+const generalTopicPreview = document.querySelector('#general-topic-preview');
 data.recruitment = Array.isArray(data.recruitment) ? data.recruitment : [];
 
 const pageEditorKinds = { about: 'blocks', sponsors: 'blocks', general: 'accordion', home: 'home' };
@@ -377,15 +380,89 @@ function bindAdminViews() {
     window.history.replaceState(null, '', `#${tab.dataset.adminView}`);
     if (tab.dataset.adminView === 'settings-view') loadAuditLog();
   }));
-  document.querySelector('[data-general-manager]')?.addEventListener('click', (event) => {
-    event.preventDefault();
-    document.querySelector('[data-admin-view="content-view"]')?.click();
-    contentPage.value = 'general';
-    fillPageContentForm();
-    renderPageSections();
-  });
   showView(window.location.hash.slice(1) || 'content-view');
   if (window.location.hash === '#settings-view') loadAuditLog();
+}
+
+function generalTopics() {
+  const page = ensurePageData('general');
+  page.sections = Array.isArray(page.sections) ? page.sections : [];
+  return page.sections;
+}
+
+function clearGeneralTopicForm() {
+  generalTopicForm.reset();
+  document.querySelector('#general-topic-id').value = '';
+  generalTopicPreview.hidden = true;
+}
+
+function generalTopicValues() {
+  return {
+    heading: document.querySelector('#general-topic-title').value.trim(),
+    description: document.querySelector('#general-topic-description').value.trim(),
+    body: document.querySelector('#general-topic-body').value.trim(),
+    resources: document.querySelector('#general-topic-resources').value.split('\n').map((url) => url.trim()).filter(Boolean)
+  };
+}
+
+function editGeneralTopic(id) {
+  const topic = generalTopics().find((item) => item.id === id);
+  if (!topic) return;
+  document.querySelector('#general-topic-id').value = topic.id;
+  document.querySelector('#general-topic-title').value = topic.heading || '';
+  document.querySelector('#general-topic-description').value = topic.description || '';
+  document.querySelector('#general-topic-body').value = topic.body || '';
+  document.querySelector('#general-topic-resources').value = Array.isArray(topic.resources) ? topic.resources.join('\n') : '';
+  generalTopicPreview.hidden = true;
+  generalTopicForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function previewGeneralTopic() {
+  const values = generalTopicValues();
+  if (!values.heading || (!values.description && !values.body && !values.resources.length)) {
+    showMessage('Add a title and content before previewing the topic.');
+    return;
+  }
+  generalTopicPreview.innerHTML = renderAccordion([{ ...values, status: 'published' }]);
+  generalTopicPreview.hidden = false;
+}
+
+function renderGeneralTopics() {
+  const topics = generalTopics();
+  generalTopicList.innerHTML = topics.length ? topics.map((topic, index) => {
+    const published = (topic.status || 'published') === 'published';
+    const status = published ? 'Published' : 'Draft';
+    return `<article class="recruitment-admin-item"><div><h4>${escapeHtml(topic.heading || 'Untitled topic')}<span class="recruitment-status">${status}</span></h4><p>${escapeHtml(topic.description || (topic.body ? 'Detailed content added' : 'No content yet'))}</p></div><div class="recruitment-admin-actions"><button type="button" data-general-action="edit" data-general-id="${escapeHtml(topic.id)}">Edit</button><button type="button" data-general-action="preview" data-general-id="${escapeHtml(topic.id)}">Preview</button><button type="button" data-general-action="${published ? 'unpublish' : 'publish'}" data-general-id="${escapeHtml(topic.id)}">${published ? 'Unpublish' : 'Publish'}</button><button type="button" data-general-action="up" data-general-id="${escapeHtml(topic.id)}" ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-general-action="down" data-general-id="${escapeHtml(topic.id)}" ${index === topics.length - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-general-action="delete" data-general-id="${escapeHtml(topic.id)}">Delete</button></div></article>`;
+  }).join('') : '<p class="recruitment-admin-empty">No topics have been added yet. Select “Add new topic” to begin.</p>';
+  generalTopicList.querySelectorAll('[data-general-action]').forEach((button) => button.addEventListener('click', async () => {
+    const topicsRef = generalTopics();
+    const index = topicsRef.findIndex((item) => item.id === button.dataset.generalId);
+    if (index < 0) return;
+    const topic = topicsRef[index];
+    const action = button.dataset.generalAction;
+    if (action === 'edit') return editGeneralTopic(topic.id);
+    if (action === 'preview') {
+      editGeneralTopic(topic.id);
+      previewGeneralTopic();
+      return;
+    }
+    if (action === 'delete') {
+      topicsRef.splice(index, 1);
+      clearGeneralTopicForm();
+    } else if (action === 'up' || action === 'down') {
+      const destination = action === 'up' ? index - 1 : index + 1;
+      [topicsRef[index], topicsRef[destination]] = [topicsRef[destination], topicsRef[index]];
+    } else {
+      if (action === 'publish' && !topic.description && !topic.body && !(topic.resources || []).length) {
+        showMessage('Add topic content or a supporting resource before publishing.');
+        return editGeneralTopic(topic.id);
+      }
+      topic.status = action === 'publish' ? 'published' : 'draft';
+      topic.updatedAt = new Date().toISOString();
+    }
+    await saveAdminData(action === 'delete' ? 'Topic deleted.' : action === 'publish' ? 'Topic published.' : action === 'unpublish' ? 'Topic unpublished.' : 'Topic order saved.');
+    renderGeneralTopics();
+  }));
 }
 
 function resetPartnershipForm() {
@@ -891,6 +968,30 @@ recruitmentForm.addEventListener('submit', async (event) => {
 document.querySelector('#recruitment-preview-button').addEventListener('click', renderRecruitmentPreview);
 document.querySelector('#recruitment-clear-button').addEventListener('click', clearRecruitmentForm);
 
+generalTopicForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!generalTopicForm.reportValidity()) return;
+  const values = generalTopicValues();
+  const status = event.submitter?.value === 'publish' ? 'published' : 'draft';
+  if (status === 'published' && !values.description && !values.body && !values.resources.length) {
+    showMessage('Add topic content or a supporting resource before publishing.');
+    return;
+  }
+  const id = document.querySelector('#general-topic-id').value;
+  const topics = generalTopics();
+  const existing = id ? topics.find((item) => item.id === id) : null;
+  const now = new Date().toISOString();
+  const topic = { ...values, id: existing?.id || makeSectionId(), status, createdAt: existing?.createdAt || now, updatedAt: now };
+  if (existing) topics[topics.indexOf(existing)] = topic;
+  else topics.push(topic);
+  const saved = await saveAdminData(status === 'published' ? 'Topic published.' : 'Topic saved as a draft.');
+  if (saved) clearGeneralTopicForm();
+  renderGeneralTopics();
+});
+
+document.querySelector('#general-topic-preview-button').addEventListener('click', previewGeneralTopic);
+document.querySelector('#general-topic-clear-button').addEventListener('click', clearGeneralTopicForm);
+
 pageContentForm.addEventListener('submit', (event) => {
   event.preventDefault();
   data.pageContent = data.pageContent || {};
@@ -987,6 +1088,7 @@ fillPageContentForm();
 renderPageSections();
 renderEvents();
 renderRecruitmentManager();
+renderGeneralTopics();
 renderInquiries();
 renderPartnerships();
 renderPartnershipCms();
@@ -1009,6 +1111,7 @@ window.addEventListener('admin-authenticated', async () => {
       renderPartnershipCms();
       renderEvents();
       renderRecruitmentManager();
+      renderGeneralTopics();
       renderPageSections();
       fillCompanyForm();
       fillPageContentForm();
