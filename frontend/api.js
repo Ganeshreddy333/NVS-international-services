@@ -13,7 +13,10 @@
   function cacheContent(data) {
     latestContent = data;
     const cachedData = { ...data };
-    if (authenticated) delete cachedData.partnershipSection;
+    if (authenticated) {
+      delete cachedData.partnershipSection;
+      delete cachedData.recruitment;
+    }
     try {
       localStorage.setItem(DATA_KEY, JSON.stringify(cachedData));
     } catch (error) {
@@ -54,7 +57,10 @@
     if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
     const serialized = JSON.stringify(data);
     const cachedData = { ...data };
-    if (authenticated) delete cachedData.partnershipSection;
+    if (authenticated) {
+      delete cachedData.partnershipSection;
+      delete cachedData.recruitment;
+    }
     const cachedSerialized = JSON.stringify(cachedData);
     latestContent = data;
     try {

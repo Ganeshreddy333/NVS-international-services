@@ -1412,6 +1412,7 @@ function getSiteData() {
       websiteInformation: { ...baseData.websiteInformation, ...(savedData.websiteInformation || {}) },
       partnerships: Array.isArray(savedData.partnerships) ? savedData.partnerships : structuredClone(baseData.partnerships),
       conferences: Array.isArray(savedData.conferences) && savedData.conferences.length ? savedData.conferences.map((conference) => ({ ...conference, images: Array.isArray(conference.images) ? conference.images : [] })) : structuredClone(baseData.conferences),
+      recruitment: Array.isArray(savedData.recruitment) ? savedData.recruitment : [],
       inquiries: Array.isArray(savedData.inquiries) ? savedData.inquiries : []
     };
     const removedConferenceIds = ['nanotechnology-2027', 'biotechnology-2027', 'artificial-intelligence-2027', 'environmental-science-2027', 'engineering-2027', 'healthcare-medical-sciences-2027'];
@@ -1691,6 +1692,53 @@ function renderFooter() {
   const linkedinUrl = String(data.websiteInformation?.linkedinUrl || '').trim();
   const linkedinLink = /^https?:\/\//i.test(linkedinUrl) ? `<a class="linkedin-page-link" href="${escapeHtml(linkedinUrl)}" target="_blank" rel="noopener noreferrer">LinkedIn</a>` : '';
   return `<footer class="site-footer"><div class="footer-columns"><div class="footer-company"><img class="footer-logo" src="assets/nvs-international-services-logo-transparent.png" alt="NVS International Services"><p>Empowering Scientific Innovation & Global Collaboration</p></div><div class="footer-links"><h3>QUICK LINKS</h3><a href="index.html">Home</a><a href="about.html">About Us</a><a href="conferences.html">Conferences</a><a href="sponsors.html">Sponsors & Exhibitors</a><a href="gallery.html">Gallery</a><a href="general-information.html">General Information</a><a href="careers.html">Careers</a><a href="contact.html">Contact Us</a></div><div class="footer-contact"><h3>CONTACT INFO</h3><a href="mailto:${escapeHtml(data.contact.email)}">${escapeHtml(data.contact.email)}</a><a href="tel:${escapeHtml(data.contact.phone)}">${escapeHtml(data.contact.phone)}</a><span>${escapeHtml(data.contact.location)}</span>${linkedinLink}</div></div><div class="footer-bottom"><span>© 2026 NVS International Services. All rights reserved.</span><span>NVS INTERNATIONAL SERVICES</span></div></footer>`;
+}
+
+function recruitmentLines(value) {
+  const lines = String(value || '').split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  return lines.length ? `<ul>${lines.map((line) => `<li>${escapeHtml(line.replace(/^[-*•]\s*/, ''))}</li>`).join('')}</ul>` : '';
+}
+
+function renderRecruitmentListing(listing) {
+  const deadline = listing.deadline
+    ? new Date(`${listing.deadline}T00:00:00Z`).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
+    : 'Open until filled';
+  const applicationUrl = /^https?:\/\//i.test(String(listing.applicationUrl || '')) ? String(listing.applicationUrl) : '';
+  const applicationEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(listing.applicationEmail || '')) ? String(listing.applicationEmail) : '';
+  const applicationLinks = [
+    applicationUrl ? `<a class="button button-lime" href="${escapeHtml(applicationUrl)}" target="_blank" rel="noopener noreferrer">Apply Now <span aria-hidden="true">↗</span></a>` : '',
+    applicationEmail ? `<a class="careers-apply-email" href="mailto:${escapeHtml(applicationEmail)}">Email ${escapeHtml(applicationEmail)}</a>` : ''
+  ].filter(Boolean).join('');
+  const details = [
+    listing.location ? `<span><b>Location</b>${escapeHtml(listing.location)}</span>` : '',
+    listing.employmentType ? `<span><b>Employment</b>${escapeHtml(listing.employmentType)}</span>` : '',
+    listing.vacancies ? `<span><b>Vacancies</b>${escapeHtml(listing.vacancies)}</span>` : '',
+    listing.salary ? `<span><b>Compensation</b>${escapeHtml(listing.salary)}</span>` : '',
+    `<span><b>Apply by</b>${escapeHtml(deadline)}</span>`
+  ].filter(Boolean).join('');
+  return `<article class="careers-opening-card">
+    <header class="careers-opening-header"><div>${listing.department ? `<p class="careers-kicker">${escapeHtml(listing.department)}</p>` : ''}<h3>${escapeHtml(listing.title)}</h3></div><span class="careers-opening-type">${escapeHtml(listing.employmentType || 'Position')}</span></header>
+    ${details ? `<div class="careers-opening-meta">${details}</div>` : ''}
+    ${listing.description ? `<div class="careers-opening-description">${renderParagraphs(listing.description)}</div>` : ''}
+    ${listing.responsibilities ? `<section class="careers-opening-detail"><h4>Responsibilities</h4>${recruitmentLines(listing.responsibilities)}</section>` : ''}
+    ${listing.qualifications ? `<section class="careers-opening-detail"><h4>Required qualifications</h4>${recruitmentLines(listing.qualifications)}</section>` : ''}
+    ${listing.experience ? `<section class="careers-opening-detail"><h4>Experience</h4>${renderParagraphs(listing.experience)}</section>` : ''}
+    ${listing.skills ? `<section class="careers-opening-detail"><h4>Skills</h4>${recruitmentLines(listing.skills)}</section>` : ''}
+    ${listing.applicationInstructions ? `<section class="careers-opening-detail"><h4>How to apply</h4>${renderParagraphs(listing.applicationInstructions)}</section>` : ''}
+    ${applicationLinks ? `<div class="careers-opening-actions">${applicationLinks}</div>` : ''}
+  </article>`;
+}
+
+function renderCareersOpenings() {
+  const today = new Date().toISOString().slice(0, 10);
+  const activeListings = (Array.isArray(getSiteData().recruitment) ? getSiteData().recruitment : [])
+    .filter((listing) => listing && listing.status === 'published' && String(listing.title || '').trim()
+      && (!listing.deadline || listing.deadline >= today))
+    .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+  const content = activeListings.length
+    ? `<div class="careers-openings-list">${activeListings.map(renderRecruitmentListing).join('')}</div>`
+    : '<p class="careers-openings-empty">No current openings available. Please check back later.</p>';
+  return `<section class="careers-section careers-openings" id="current-openings"><div class="careers-section-heading"><p class="careers-kicker">CURRENT OPENINGS</p><h2>Career opportunities</h2></div>${content}</section>`;
 }
 
 function careerPageContent() {
@@ -1981,6 +2029,11 @@ function startPage() {
   }
   if (page === 'careers') {
     renderShell('careers-page', 'careers', careerPageContent());
+    document.querySelector('.careers-empty-state')?.remove();
+    document.querySelector('.careers-hero-compact')?.classList.add('careers-hero-no-current-card');
+    const openingsText = document.querySelector('.careers-growth-copy p:nth-child(2)');
+    if (openingsText) openingsText.textContent = openingsText.textContent.replace(/\s*There are no openings at this time\.\s*$/, '');
+    document.querySelector('.careers-candidates')?.insertAdjacentHTML('afterend', renderCareersOpenings());
   }
   if (page === 'conferences') {
     renderShell('conferences-page', 'conferences', conferencePageContent());

@@ -13,6 +13,9 @@ if ($method === 'GET') {
             throw new UnexpectedValueException('Stored content must be a JSON object.');
         }
         $content = sanitize_content($content);
+        if (array_key_exists('recruitment', $content)) {
+            $content['recruitment'] = public_recruitment_list($content['recruitment']);
+        }
         if (array_key_exists('partnershipSection', $content)) {
             $section = normalize_partnership_section($content['partnershipSection']);
             $content['partnershipSection'] = public_partnership_version($section['published'] ?? null);
@@ -41,10 +44,16 @@ if ($method !== 'PUT') {
 require_admin();
 require_csrf();
 $incoming = request_data(10_000_000);
+if (array_key_exists('recruitment', $incoming)) {
+    normalize_recruitment_list($incoming['recruitment']);
+}
 if (array_key_exists('partnershipSection', $incoming)) {
     normalize_partnership_section($incoming['partnershipSection']);
 }
 $content = sanitize_content($incoming);
+if (array_key_exists('recruitment', $content)) {
+    $content['recruitment'] = normalize_recruitment_list($content['recruitment']);
+}
 if (array_key_exists('partnershipSection', $content)) {
     $content['partnershipSection'] = normalize_partnership_section($content['partnershipSection']);
 }

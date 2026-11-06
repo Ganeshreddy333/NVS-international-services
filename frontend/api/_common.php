@@ -167,6 +167,130 @@ function valid_partnership_image(string $url): bool
     return preg_match('#^/?uploads/gallery/[a-f0-9]{40}\.(?:jpg|png|gif|webp)$#i', $url) === 1;
 }
 
+function recruitment_string(mixed $value, string $key, int $maxLength): string
+{
+    if (!is_string($value) || strlen($value) > $maxLength) {
+        respond(['error' => 'Invalid value for recruitment ' . $key . '.'], 400);
+    }
+    return trim($value);
+}
+
+function normalize_recruitment_list(mixed $value): array
+{
+    if (!is_array($value) || count($value) > 100) {
+        respond(['error' => 'Recruitment listings must be a list of no more than 100 vacancies.'], 400);
+    }
+
+    $list = [];
+    $ids = [];
+    $employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Internship'];
+    $fields = [
+        'title' => 240,
+        'department' => 160,
+        'description' => 10000,
+        'responsibilities' => 10000,
+        'qualifications' => 10000,
+        'experience' => 3000,
+        'skills' => 5000,
+        'employmentType' => 30,
+        'location' => 240,
+        'salary' => 240,
+        'deadline' => 10,
+        'applicationInstructions' => 5000,
+        'applicationUrl' => 2048,
+        'applicationEmail' => 254,
+        'createdAt' => 40,
+        'updatedAt' => 40,
+    ];
+
+    foreach ($value as $item) {
+        if (!is_array($item)) {
+            respond(['error' => 'Invalid recruitment listing.'], 400);
+        }
+        $id = recruitment_string($item['id'] ?? '', 'listing ID', 100);
+        if ($id === '' || in_array($id, $ids, true)) {
+            respond(['error' => 'Recruitment listing IDs must be unique and non-empty.'], 400);
+        }
+        $ids[] = $id;
+
+        $listing = ['id' => $id];
+        foreach ($fields as $key => $limit) {
+            $listing[$key] = recruitment_string($item[$key] ?? '', $key, $limit);
+        }
+        $listing['employmentType'] = $listing['employmentType'] ?: 'Full-time';
+        if (!in_array($listing['employmentType'], $employmentTypes, true)) {
+            respond(['error' => 'Choose a valid recruitment employment type.'], 400);
+        }
+        $vacancies = $item['vacancies'] ?? 1;
+        if (!is_int($vacancies) || $vacancies < 1 || $vacancies > 10000) {
+            respond(['error' => 'Number of vacancies must be between 1 and 10000.'], 400);
+        }
+        $listing['vacancies'] = $vacancies;
+
+        if ($listing['deadline'] !== '') {
+            $deadline = DateTimeImmutable::createFromFormat('!Y-m-d', $listing['deadline']);
+            if (!$deadline || $deadline->format('Y-m-d') !== $listing['deadline']) {
+                respond(['error' => 'Application deadlines must use the YYYY-MM-DD format.'], 400);
+            }
+        }
+        if ($listing['applicationUrl'] !== '' && !valid_website_url($listing['applicationUrl'])) {
+            respond(['error' => 'Application URLs must be valid HTTP or HTTPS links.'], 400);
+        }
+        if ($listing['applicationEmail'] !== '' && !filter_var($listing['applicationEmail'], FILTER_VALIDATE_EMAIL)) {
+            respond(['error' => 'Enter a valid application email address.'], 400);
+        }
+
+        $status = $item['status'] ?? 'draft';
+        if (!is_string($status) || !in_array($status, ['draft', 'published'], true)) {
+            respond(['error' => 'Recruitment status must be draft or published.'], 400);
+        }
+        if ($status === 'published' && $listing['applicationUrl'] === '' && $listing['applicationEmail'] === '') {
+            respond(['error' => 'Add an application URL or email address before publishing a vacancy.'], 400);
+        }
+        $listing['status'] = $status;
+        $listing['createdAt'] = $listing['createdAt'] ?: gmdate('c');
+        $listing['updatedAt'] = $listing['updatedAt'] ?: $listing['createdAt'];
+        $list[] = $listing;
+    }
+
+    return $list;
+}
+
+function public_recruitment_list(mixed $value): array
+{
+    if (!is_array($value)) {
+        return [];
+    }
+    $today = gmdate('Y-m-d');
+    $publicListings = [];
+    $allowedFields = array_fill_keys([
+        'id', 'title', 'department', 'description', 'responsibilities', 'qualifications',
+        'experience', 'skills', 'employmentType', 'vacancies', 'location', 'salary',
+        'deadline', 'applicationInstructions', 'applicationUrl', 'applicationEmail',
+        'status', 'createdAt', 'updatedAt',
+    ], true);
+    foreach ($value as $item) {
+        if (!is_array($item) || ($item['status'] ?? '') !== 'published' || trim((string)($item['title'] ?? '')) === '') {
+            continue;
+        }
+        $deadline = (string)($item['deadline'] ?? '');
+        if ($deadline !== '' && (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $deadline) || $deadline < $today)) {
+            continue;
+        }
+        $url = (string)($item['applicationUrl'] ?? '');
+        $email = (string)($item['applicationEmail'] ?? '');
+        $validUrl = $url !== '' && valid_website_url($url);
+        $validEmail = $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL);
+        if (!$validUrl && !$validEmail) {
+            continue;
+        }
+        $item['applicationUrl'] = $validUrl ? $url : '';
+        $item['applicationEmail'] = $validEmail ? $email : '';
+        $publicListings[] = array_intersect_key($item, $allowedFields);
+    }
+    return $publicListings;
+}
+
 function partnership_string(mixed $value, string $key, int $maxLength): string
 {
     if (!is_string($value) || strlen($value) > $maxLength) {

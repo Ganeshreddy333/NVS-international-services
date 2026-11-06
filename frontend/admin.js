@@ -16,6 +16,10 @@ const partnershipCategoriesEditor = document.querySelector('#partnership-categor
 const partnershipExtraImagesEditor = document.querySelector('#partnership-extra-images-editor');
 const partnershipTextOrderEditor = document.querySelector('#partnership-text-order-editor');
 const pageSectionsBody = document.querySelector('#page-sections-body');
+const recruitmentForm = document.querySelector('#recruitment-form');
+const recruitmentList = document.querySelector('#recruitment-list');
+const recruitmentPreview = document.querySelector('#recruitment-preview');
+data.recruitment = Array.isArray(data.recruitment) ? data.recruitment : [];
 
 const pageEditorKinds = { about: 'blocks', sponsors: 'blocks', general: 'accordion', home: 'home' };
 const partnershipTextLabels = {
@@ -742,6 +746,90 @@ function renderEvents() {
   renderGalleryPreview();
 }
 
+function recruitmentFields() {
+  return ['id', 'title', 'department', 'location', 'employmentType', 'vacancies', 'salary', 'deadline', 'applicationUrl', 'applicationEmail', 'description', 'responsibilities', 'qualifications', 'experience', 'skills', 'applicationInstructions'];
+}
+
+function recruitmentFormValues() {
+  const values = {};
+  recruitmentFields().forEach((key) => {
+    const field = recruitmentForm.querySelector(`[data-recruitment-field="${key}"]`);
+    values[key] = key === 'vacancies' ? Number(field.value) : field.value.trim();
+  });
+  return values;
+}
+
+function renderRecruitmentPreview() {
+  const listing = recruitmentFormValues();
+  if (!listing.title) {
+    showMessage('Enter a job title before previewing this vacancy.');
+    return;
+  }
+  const paragraphs = (value) => String(value || '').split(/\n\s*\n/).map((text) => text.trim()).filter(Boolean).map((text) => `<p>${escapeHtml(text)}</p>`).join('');
+  const bullets = (value) => {
+    const lines = String(value || '').split(/\n+/).map((text) => text.trim().replace(/^[-*•]\s*/, '')).filter(Boolean);
+    return lines.length ? `<ul>${lines.map((text) => `<li>${escapeHtml(text)}</li>`).join('')}</ul>` : '';
+  };
+  const applicationUrl = /^https?:\/\//i.test(listing.applicationUrl) ? `<a class="button button-lime" href="${escapeHtml(listing.applicationUrl)}" target="_blank" rel="noopener noreferrer">Apply Now ↗</a>` : '';
+  const applicationEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(listing.applicationEmail) ? `<a class="careers-apply-email" href="mailto:${escapeHtml(listing.applicationEmail)}">Email ${escapeHtml(listing.applicationEmail)}</a>` : '';
+  recruitmentPreview.innerHTML = `<article class="careers-opening-card"><header class="careers-opening-header"><div><p class="careers-kicker">${escapeHtml(listing.department)}</p><h3>${escapeHtml(listing.title)}</h3></div><span class="careers-opening-type">${escapeHtml(listing.employmentType)}</span></header><div class="careers-opening-meta">${[listing.location, listing.employmentType, `${listing.vacancies || 1} vacancy${listing.vacancies === 1 ? '' : 'ies'}`, listing.deadline || 'Open until filled', listing.salary].filter(Boolean).map((text) => `<span>${escapeHtml(text)}</span>`).join('')}</div>${paragraphs(listing.description)}${listing.responsibilities ? `<section class="careers-opening-detail"><h4>Responsibilities</h4>${bullets(listing.responsibilities)}</section>` : ''}${listing.qualifications ? `<section class="careers-opening-detail"><h4>Required qualifications</h4>${bullets(listing.qualifications)}</section>` : ''}${listing.experience ? `<section class="careers-opening-detail"><h4>Experience</h4>${paragraphs(listing.experience)}</section>` : ''}${listing.skills ? `<section class="careers-opening-detail"><h4>Skills</h4>${bullets(listing.skills)}</section>` : ''}${listing.applicationInstructions ? `<section class="careers-opening-detail"><h4>How to apply</h4>${paragraphs(listing.applicationInstructions)}</section>` : ''}<div class="careers-opening-actions">${applicationUrl}${applicationEmail}${!applicationUrl && !applicationEmail ? '<p class="muted">Add an application URL or email before publishing.</p>' : ''}</div></article>`;
+  recruitmentPreview.hidden = false;
+  recruitmentPreview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function clearRecruitmentForm() {
+  recruitmentForm.reset();
+  recruitmentForm.querySelector('[data-recruitment-field="id"]').value = '';
+  recruitmentForm.querySelector('[data-recruitment-field="vacancies"]').value = '1';
+  recruitmentPreview.hidden = true;
+}
+
+function editRecruitment(id) {
+  const listing = data.recruitment.find((item) => item.id === id);
+  if (!listing) return;
+  recruitmentFields().forEach((key) => {
+    const field = recruitmentForm.querySelector(`[data-recruitment-field="${key}"]`);
+    field.value = listing[key] ?? (key === 'vacancies' ? '1' : '');
+  });
+  recruitmentForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderRecruitmentManager() {
+  const today = new Date().toISOString().slice(0, 10);
+  recruitmentList.innerHTML = data.recruitment.length ? data.recruitment
+    .slice()
+    .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')))
+    .map((listing) => {
+      const expired = listing.status === 'published' && listing.deadline && listing.deadline < today;
+      const status = expired ? 'Expired' : listing.status === 'published' ? 'Published' : 'Draft';
+      return `<article class="recruitment-admin-item"><div><h4>${escapeHtml(listing.title)}<span class="recruitment-status">${status}</span></h4><p>${escapeHtml([listing.department, listing.location, listing.employmentType, listing.deadline ? `Deadline ${listing.deadline}` : 'No deadline'].filter(Boolean).join(' · '))}</p></div><div class="recruitment-admin-actions"><button type="button" data-recruitment-action="edit" data-recruitment-id="${escapeHtml(listing.id)}">Edit</button><button type="button" data-recruitment-action="${listing.status === 'published' ? 'unpublish' : 'publish'}" data-recruitment-id="${escapeHtml(listing.id)}">${listing.status === 'published' ? 'Unpublish' : 'Publish'}</button><button class="delete" type="button" data-recruitment-action="delete" data-recruitment-id="${escapeHtml(listing.id)}">Delete</button></div></article>`;
+    }).join('') : '<p class="recruitment-admin-empty">No vacancies have been added yet.</p>';
+  recruitmentList.querySelectorAll('[data-recruitment-action]').forEach((button) => button.addEventListener('click', async () => {
+    const listing = data.recruitment.find((item) => item.id === button.dataset.recruitmentId);
+    if (!listing) return;
+    const action = button.dataset.recruitmentAction;
+    if (action === 'edit') {
+      editRecruitment(listing.id);
+      return;
+    }
+    if (action === 'publish' && !listing.applicationUrl && !listing.applicationEmail) {
+      showMessage('Add an application URL or email address before publishing a vacancy.');
+      editRecruitment(listing.id);
+      return;
+    }
+    if (action === 'delete') {
+      data.recruitment = data.recruitment.filter((item) => item.id !== listing.id);
+      clearRecruitmentForm();
+      await saveAdminData('Recruitment listing deleted.');
+    } else {
+      listing.status = action === 'publish' ? 'published' : 'draft';
+      listing.updatedAt = new Date().toISOString();
+      await saveAdminData(action === 'publish' ? 'Recruitment listing published.' : 'Recruitment listing unpublished.');
+    }
+    renderRecruitmentManager();
+  }));
+}
+
 function editConference(id) {
   const event = data.conferences.find((item) => item.id === id);
   if (!event) return;
@@ -788,6 +876,39 @@ companyForm.addEventListener('submit', (event) => {
   data.websiteInformation.linkedinUrl = document.querySelector('#linkedin-url').value.trim();
   saveAdminData('Company details saved.');
 });
+
+recruitmentForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!recruitmentForm.reportValidity()) return;
+  const values = recruitmentFormValues();
+  const action = event.submitter?.value === 'publish' ? 'published' : 'draft';
+  if (action === 'published' && !values.applicationUrl && !values.applicationEmail) {
+    showMessage('Add an application URL or email address before publishing a vacancy.');
+    return;
+  }
+  const existing = values.id ? data.recruitment.find((item) => item.id === values.id) : null;
+  const now = new Date().toISOString();
+  const listing = {
+    ...values,
+    id: existing?.id || partnershipId('vacancy'),
+    status: action,
+    createdAt: existing?.createdAt || now,
+    updatedAt: now
+  };
+  if (existing) {
+    data.recruitment[data.recruitment.indexOf(existing)] = listing;
+  } else {
+    data.recruitment.push(listing);
+  }
+  const saved = await saveAdminData(existing
+    ? action === 'published' ? 'Recruitment listing updated and published.' : 'Recruitment listing saved as a draft.'
+    : action === 'published' ? 'Recruitment listing published.' : 'Recruitment listing saved as a draft.');
+  if (saved) clearRecruitmentForm();
+  renderRecruitmentManager();
+});
+
+document.querySelector('#recruitment-preview-button').addEventListener('click', renderRecruitmentPreview);
+document.querySelector('#recruitment-clear-button').addEventListener('click', clearRecruitmentForm);
 
 pageContentForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -887,6 +1008,7 @@ fillCompanyForm();
 fillPageContentForm();
 renderPageSections();
 renderEvents();
+renderRecruitmentManager();
 renderInquiries();
 renderPartnerships();
 renderPartnershipCms();
@@ -905,14 +1027,16 @@ window.addEventListener('admin-authenticated', async () => {
       Object.keys(data).forEach((key) => delete data[key]);
       Object.assign(data, latest);
       data.partnerships = Array.isArray(data.partnerships) ? data.partnerships : [];
+      data.recruitment = Array.isArray(data.recruitment) ? data.recruitment : [];
       renderPartnerships();
       renderPartnershipCms();
       renderEvents();
+      renderRecruitmentManager();
       renderPageSections();
       fillCompanyForm();
       fillPageContentForm();
     }
   } catch (error) {
-    showMessage(`Could not load saved partnership content: ${error.message}`);
+    showMessage(`Could not load saved admin content: ${error.message}`);
   }
 });

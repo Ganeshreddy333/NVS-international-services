@@ -32,7 +32,7 @@
 .about-page .about-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px;margin:22px 0 0;padding:0;border-top:1px solid #d9d7cf;background:transparent;list-style:none}
 .about-page .about-list li{display:grid;align-content:start;gap:7px;padding:18px 0;border-bottom:1px solid #d9d7cf;background:transparent}
 .about-page .about-list li strong{color:#183448;font-size:13px;line-height:1.5}
-.about-page .about-list li span{color:#657482;font-size:12px;line-height:1.75}
+.about-page .about-list li span{color:#4f5c65;font-size:12px;line-height:1.75}
 .about-page .about-topic-list{counter-reset:about-topic;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 25px;margin:22px 0 0;padding:0;border-top:1px solid #d9d7cf;list-style:none;color:#425567;font-size:12px;line-height:1.6}
 .about-page .about-topic-list li{counter-increment:about-topic;display:flex;align-items:baseline;gap:12px;padding:11px 0;border-bottom:1px solid #e5e2d9}
 .about-page .about-topic-list li:before{content:counter(about-topic,decimal-leading-zero);flex:0 0 23px;color:#c27b36;font:700 9px var(--mono)}
@@ -45,7 +45,7 @@
 .about-page .about-closing{padding-bottom:28px;border-bottom:0}
 .about-page .about-signoff{display:grid;gap:8px;margin:28px 0 0;padding:21px 0 0;border:0;border-top:2px solid #df9d48;border-radius:0;background:transparent;box-shadow:none}
 .about-page .about-signoff strong{color:#173448;font-family:Georgia,"Times New Roman",serif;font-size:21px;font-weight:400}
-.about-page .about-signoff span{color:#667683;font-size:11px;line-height:1.8}
+.about-page .about-signoff span{color:#4f5c65;font-size:11px;line-height:1.8}
 .about-page .about-signoff b{color:#18765e;font-size:12px;line-height:1.7}
 .about-page .about-chapter-copy .button{border-radius:0;background:#183d53;color:white;box-shadow:none}
 .about-page .about-chapter-copy .button:hover{background:#d9913f;color:#102b43;transform:translateY(-2px)}

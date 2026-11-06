@@ -48,6 +48,8 @@ Public content responses include an ETag. Frontend pages revalidate it every 10 
 
 Card 13 on the Sponsor & Exhibit page uses the existing `site_content` JSON document. Its editable draft and last published snapshot are stored separately; public `GET api/content.php` responses include only the published snapshot, approved uploaded images, and published categories/partners. Admins load editable content through `GET api/admin-content.php`; publishing or unpublishing uses the authenticated, CSRF-protected content update API. Partner logos and supporting images use the existing validated upload endpoint and `uploads/gallery/` storage. Public rendering accepts only uploaded image paths and HTTP(S) partner website URLs. Rendering is confined to the existing `#sponsor-section-13` slot; the homepage and remaining prospectus sections keep their existing content.
 
+Recruitment listings use the same `site_content` JSON document and authenticated content update workflow. Administrators manage drafts, publication state, and application details from Admin > Recruitment. Public `GET api/content.php` returns only published listings with a valid application URL or email address and a deadline that has not passed; the existing Careers page renders them immediately after “Who This Work Serves.”
+
 ## Local server
 
 From the repository root, run `php -S 127.0.0.1:8002 -t frontend` and visit `http://127.0.0.1:8002/`. Do not use a static-only server for PHP endpoints.

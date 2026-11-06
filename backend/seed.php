@@ -13,12 +13,6 @@ if (!is_file($configPath)) {
 }
 $config = require $configPath;
 try {
-    $pdo = new PDO(
-        sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $config['db_host'], (int)($config['db_port'] ?? 3306), $config['db_name']),
-        $config['db_user'],
-        $config['db_password'],
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]
-    );
     fwrite(STDOUT, 'Admin username: ');
     $username = trim((string)fgets(STDIN));
     if ($username === '' || strlen($username) > 100) {
@@ -43,6 +37,12 @@ try {
         throw new RuntimeException('Use a password between 12 and 1024 characters.');
     }
 
+    $pdo = new PDO(
+        sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $config['db_host'], (int)($config['db_port'] ?? 3306), $config['db_name']),
+        $config['db_user'],
+        $config['db_password'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]
+    );
     $statement = $pdo->prepare(
         'INSERT INTO admin_users (username, password_hash) VALUES (:username, :password_hash)
          ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash)'

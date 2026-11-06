@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="styles.css?v=20260928-3">
   <link rel="stylesheet" href="pages.css?v=20261106-partnership-cms">
   <link rel="stylesheet" href="partnership.css?v=20261106-cms">
+  <link rel="stylesheet" href="recruitment.css?v=20261106-careers-listings">
   <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -43,6 +44,7 @@
       <a href="#information-view" data-admin-view="information-view">Website Information</a>
       <a href="#conference-view" data-admin-view="conference-view">Conferences</a>
       <a href="#partnership-view" data-admin-view="partnership-view">Partnership / 13</a>
+      <a href="#recruitment-view" data-admin-view="recruitment-view">Recruitment</a>
       <a href="#media-view" data-admin-view="media-view">Media / Gallery</a>
       <a href="#enquiries-view" data-admin-view="enquiries-view">Enquiries</a>
       <a href="#settings-view" data-admin-view="settings-view">Settings</a>
@@ -174,13 +176,48 @@
         </section>
         <section class="admin-card"><h2>Sponsorship and Exhibition Packages</h2><p class="muted">Manage existing packages independently from the Sponsor &amp; Exhibit page's published Card 13 partner listings.</p><form id="partnership-form" class="partnership-form"><input type="hidden" id="partnership-id"><div class="field"><label for="partnership-type">Type</label><select id="partnership-type"><option value="sponsor">Sponsor</option><option value="exhibitor">Exhibitor</option></select></div><div class="field"><label for="partnership-name">Name</label><input id="partnership-name" required></div><div class="field"><label for="partnership-price">Price</label><input id="partnership-price" required></div><div class="field"><label for="partnership-title">Heading</label><input id="partnership-title" required></div><div class="field"><label for="partnership-description">Description</label><textarea id="partnership-description" required></textarea></div><div class="field"><label for="partnership-benefits">Benefits, one per line</label><textarea id="partnership-benefits" required></textarea></div><button class="button button-lime" type="submit"><span id="partnership-submit-label">Add Package</span> <span>↗</span></button><button class="button button-ghost clear-button" id="partnership-clear" type="button">Clear</button></form><div id="partnership-list" class="partnership-list"></div></section>
       </div>
+      <div class="admin-view" id="recruitment-view">
+        <section class="admin-card recruitment-manager">
+          <h2>Recruitment / Careers Management</h2>
+          <p class="muted">Create and manage vacancies shown on the existing Careers page, immediately after “Who This Work Serves.” Drafts are private; published openings expire after their application deadline.</p>
+          <form id="recruitment-form">
+            <input type="hidden" data-recruitment-field="id">
+            <div class="recruitment-form-grid">
+              <div class="field"><label for="recruitment-title">Job title</label><input id="recruitment-title" data-recruitment-field="title" required maxlength="240"></div>
+              <div class="field"><label for="recruitment-department">Department or category</label><input id="recruitment-department" data-recruitment-field="department" maxlength="160"></div>
+              <div class="field"><label for="recruitment-location">Job location</label><input id="recruitment-location" data-recruitment-field="location" maxlength="240"></div>
+              <div class="field"><label for="recruitment-employment-type">Employment type</label><select id="recruitment-employment-type" data-recruitment-field="employmentType"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select></div>
+              <div class="field"><label for="recruitment-vacancies">Number of vacancies</label><input id="recruitment-vacancies" data-recruitment-field="vacancies" type="number" min="1" max="10000" value="1" required></div>
+              <div class="field"><label for="recruitment-salary">Salary or compensation (optional)</label><input id="recruitment-salary" data-recruitment-field="salary" maxlength="240"></div>
+              <div class="field"><label for="recruitment-deadline">Application deadline (optional)</label><input id="recruitment-deadline" data-recruitment-field="deadline" type="date"></div>
+              <div class="field"><label for="recruitment-application-url">Application URL</label><input id="recruitment-application-url" data-recruitment-field="applicationUrl" type="url" placeholder="https://example.org/apply"></div>
+              <div class="field"><label for="recruitment-application-email">Application email</label><input id="recruitment-application-email" data-recruitment-field="applicationEmail" type="email" placeholder="careers@example.org"></div>
+              <div class="field recruitment-form-wide"><label for="recruitment-description">Job description</label><textarea id="recruitment-description" data-recruitment-field="description" rows="4" maxlength="10000"></textarea></div>
+              <div class="field"><label for="recruitment-responsibilities">Responsibilities (one per line)</label><textarea id="recruitment-responsibilities" data-recruitment-field="responsibilities" rows="5" maxlength="10000"></textarea></div>
+              <div class="field"><label for="recruitment-qualifications">Required qualifications (one per line)</label><textarea id="recruitment-qualifications" data-recruitment-field="qualifications" rows="5" maxlength="10000"></textarea></div>
+              <div class="field"><label for="recruitment-experience">Required skills and experience</label><textarea id="recruitment-experience" data-recruitment-field="experience" rows="4" maxlength="3000"></textarea></div>
+              <div class="field"><label for="recruitment-skills">Additional skills (one per line)</label><textarea id="recruitment-skills" data-recruitment-field="skills" rows="4" maxlength="5000"></textarea></div>
+              <div class="field recruitment-form-wide"><label for="recruitment-instructions">Application instructions</label><textarea id="recruitment-instructions" data-recruitment-field="applicationInstructions" rows="3" maxlength="5000"></textarea></div>
+            </div>
+            <div class="recruitment-form-actions">
+              <button class="button button-ghost" type="button" id="recruitment-preview-button">Preview</button>
+              <button class="button button-ghost" type="submit" name="recruitment-action" value="draft">Save draft</button>
+              <button class="button button-lime" type="submit" name="recruitment-action" value="publish">Publish vacancy <span>↗</span></button>
+              <button class="button button-ghost" type="button" id="recruitment-clear-button">Clear form</button>
+            </div>
+          </form>
+          <div id="recruitment-preview" class="recruitment-preview" hidden></div>
+          <h3>Saved vacancies</h3>
+          <div id="recruitment-list" class="recruitment-admin-list"></div>
+        </section>
+      </div>
       <div class="admin-view" id="media-view"><section class="admin-card" id="gallery-manager"><h2>Event Gallery Manager</h2><p class="muted">Choose an event, then upload images for the matching conference gallery. Changes sync to the website when you are signed in and the server is available.</p><div class="field" style="max-width:520px;margin-top:22px"><label for="gallery-event">Choose event</label><select id="gallery-event"></select></div><div class="upload-box"><input id="gallery-upload" type="file" accept="image/*" multiple><p class="muted" style="margin-top:10px">Upload images for the selected event</p></div><div id="gallery-preview" class="gallery-preview"></div></section></div>
       <div class="admin-view" id="enquiries-view"><section class="admin-card" id="inquiry-manager"><h2>Contact Enquiries</h2><div class="inquiry-list"></div></section></div>
       <div class="admin-view" id="settings-view"><section class="admin-card"><h2>Settings</h2><p class="muted">Website content is saved to the server so changes are shared with visitors. Use the admin controls to update content, conferences, media, and enquiries.</p><button class="button button-ghost admin-logout" id="settings-logout" type="button">Sign Out</button></section><section class="admin-card"><h2>Admin Activity</h2><p class="muted">Recent content changes, including the administrator and before/after values.</p><button class="button button-ghost" id="refresh-audit-log" type="button">Refresh activity</button><div id="admin-audit-log" aria-live="polite"><p class="muted">Open Settings to load recent activity.</p></div></section></div>
     </main>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="api.js?v=20261106-partnership-cms"></script>
+  <script src="api.js?v=20261106-careers-listings"></script>
   <script>
     // Load public content first, then fetch the private admin snapshot if this session is authenticated.
     (async () => {
@@ -192,7 +229,7 @@
           window.NVS_ADMIN_CONTENT_ERROR = error.message;
         }
       }
-      ['site.js?v=20261106-partnership-cms', 'auth.js?v=20260928-api', 'admin.js?v=20261106-partnership-cms'].reduce(
+      ['site.js?v=20261106-careers-listings', 'auth.js?v=20260928-api', 'admin.js?v=20261106-careers-listings'].reduce(
         (chain, src) => chain.then(() => new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;

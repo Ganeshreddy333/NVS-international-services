@@ -1,0 +1,40 @@
+.careers-page .careers-hero-compact.careers-hero-no-current-card{min-height:320px;grid-template-columns:1fr}
+.careers-page .careers-openings{background:#f5f1e7}
+.careers-page .careers-openings-list{display:grid;gap:14px}
+.careers-page .careers-opening-card{padding:24px 26px;border:1px solid #e4d8c8;border-top:3px solid #bd6546;border-radius:9px;background:#fffaf2;box-shadow:0 6px 20px rgba(48,39,34,.05)}
+.careers-page .careers-opening-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.careers-page .careers-opening-header .careers-kicker{margin-bottom:8px}
+.careers-page .careers-opening-header h3{margin:0;color:#302b29;font-size:clamp(21px,2.4vw,30px);line-height:1.2}
+.careers-page .careers-opening-type{flex:0 0 auto;padding:6px 10px;border-radius:999px;background:#f2e6d9;color:#684132;font-size:10px;font-weight:800}
+.careers-page .careers-opening-meta{display:flex;flex-wrap:wrap;gap:9px;margin:17px 0;padding:13px 0;border-top:1px solid #e8dfd3;border-bottom:1px solid #e8dfd3}
+.careers-page .careers-opening-meta span{display:grid;gap:2px;min-width:110px;padding-right:15px;color:#514843;font-size:12px}
+.careers-page .careers-opening-meta b{color:#78513f;font:700 8px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.careers-page .careers-opening-description,.careers-page .careers-opening-detail{margin-top:15px;color:#514843;font-size:13px;line-height:1.7}
+.careers-page .careers-opening-description p,.careers-page .careers-opening-detail p{margin:0 0 8px}
+.careers-page .careers-opening-detail h4{margin:0 0 6px;color:#3b3532;font-size:14px;font-weight:800}
+.careers-page .careers-opening-detail ul{margin:0;padding-left:21px}
+.careers-page .careers-opening-detail li{margin:3px 0}
+.careers-page .careers-opening-actions{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin-top:20px}
+.careers-page .careers-opening-actions .button{background:#96513f;color:#fffdfa}
+.careers-page .careers-apply-email{color:#684132;font-size:12px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.careers-page .careers-openings-empty{margin:0;padding:18px 20px;border:1px solid #e3d8ca;border-radius:8px;background:#fffaf2;color:#514843;font-size:13px}
+
+.recruitment-manager>.muted{max-width:900px;margin-bottom:24px}
+.recruitment-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}
+.recruitment-form-wide{grid-column:1/-1}
+.recruitment-form-actions{display:flex;flex-wrap:wrap;gap:9px;margin:5px 0 25px}
+.recruitment-form-actions .button{cursor:pointer}
+.recruitment-preview{margin:0 0 24px;padding:20px;border:1px dashed #bda996;border-radius:8px;background:#fffaf2}
+.recruitment-preview[hidden]{display:none}
+.recruitment-preview .careers-opening-card{padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+.recruitment-admin-list{display:grid;gap:10px}
+.recruitment-admin-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 17px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.recruitment-admin-item h4{margin:0 0 5px;color:var(--ink);font-size:15px}
+.recruitment-admin-item p{margin:0;color:var(--muted);font-size:12px}
+.recruitment-admin-item .recruitment-status{display:inline-flex;margin-left:8px;padding:3px 8px;border-radius:999px;background:#f1eee8;color:#654b3f;font:700 9px var(--mono);text-transform:uppercase}
+.recruitment-admin-actions{display:flex;flex-wrap:wrap;gap:6px}
+.recruitment-admin-actions button{padding:7px 10px;border:1px solid var(--line);border-radius:5px;background:#f8f6f1;color:var(--ink);font:600 10px var(--display);cursor:pointer}
+.recruitment-admin-actions button.delete{border-color:#e1c4c0;color:#983f36}
+.recruitment-admin-empty{color:var(--muted);font-size:13px}
+@media(max-width:760px){.careers-page .careers-opening-card{padding:19px}.recruitment-form-grid{grid-template-columns:1fr}.recruitment-form-wide{grid-column:auto}.recruitment-admin-item{align-items:flex-start;flex-direction:column}.recruitment-admin-actions{width:100%}}
+@media(max-width:480px){.careers-page .careers-opening-header{flex-direction:column;gap:10px}.careers-page .careers-opening-meta{display:grid;grid-template-columns:1fr 1fr}.careers-page .careers-opening-meta span{min-width:0}.recruitment-form-actions{display:grid;grid-template-columns:1fr 1fr}}

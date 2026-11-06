@@ -191,3 +191,17 @@ html{scroll-padding-top:130px}
 .contact-page .page-hero{min-height:400px;padding-block:68px 60px}
 @media(max-width:800px){.contact-page .page-hero{min-height:350px;padding-block:58px 52px}}
 @media(max-width:620px){.contact-page .page-hero{min-height:315px;padding-block:50px 44px}}
+
+/* Preserve readable foreground contrast on the warm, light page surfaces. */
+body:has(main>.hero) .hero-proof strong{color:#514843}
+body:has(main>.hero) .explainer-topline span:last-child{color:#795143}
+body:has(main>.hero) .home-upcoming-list .conference-card .tag,
+body:has(main>.hero) .home-upcoming-list .conference-card .date span{color:#116348}
+.main-nav a:not(.nav-cta).active{background:#96513f;color:#fff!important}
+.general-page .page-hero-copy>p{color:#554c47}
+.partners-page .sponsor-index a,
+.partners-page .sponsor-index a:hover,
+.partners-page .sponsor-index a:last-child,
+.partners-page .sponsor-index b{color:#684132}
+.legal-page .legal-policy p,
+.legal-page .legal-policy li{color:#514843}
