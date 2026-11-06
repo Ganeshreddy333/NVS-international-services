@@ -33,10 +33,10 @@ function require_method(string $method): void
     }
 }
 
-function request_data(): array
+function request_data(int $maxBytes = 2_000_000): array
 {
     $raw = file_get_contents('php://input');
-    if ($raw === false || strlen($raw) > 2_000_000) {
+    if ($raw === false || strlen($raw) > $maxBytes) {
         respond(['error' => 'Request body is too large'], 413);
     }
     if (!str_starts_with(ltrim($raw), '{')) {
@@ -150,6 +150,226 @@ function safe_link(string $url): bool
     return in_array($scheme, ['http', 'https', 'mailto', 'tel'], true);
 }
 
+function valid_website_url(string $url): bool
+{
+    if (strlen($url) > 2048 || !filter_var($url, FILTER_VALIDATE_URL)) {
+        return false;
+    }
+    $scheme = strtolower((string)parse_url($url, PHP_URL_SCHEME));
+    return in_array($scheme, ['http', 'https'], true)
+        && is_string(parse_url($url, PHP_URL_HOST))
+        && parse_url($url, PHP_URL_USER) === null
+        && parse_url($url, PHP_URL_PASS) === null;
+}
+
+function valid_partnership_image(string $url): bool
+{
+    return preg_match('#^/?uploads/gallery/[a-f0-9]{40}\.(?:jpg|png|gif|webp)$#i', $url) === 1;
+}
+
+function partnership_string(mixed $value, string $key, int $maxLength): string
+{
+    if (!is_string($value) || strlen($value) > $maxLength) {
+        respond(['error' => 'Invalid value for partnership ' . $key . '.'], 400);
+    }
+    return $value;
+}
+
+function normalize_partnership_version(mixed $value): ?array
+{
+    if ($value === null) {
+        return null;
+    }
+    if (!is_array($value)) {
+        respond(['error' => 'Partnership content must be an object.'], 400);
+    }
+
+    $version = [];
+    foreach ([
+        'eyebrow' => 120,
+        'title' => 240,
+        'introHeading' => 240,
+        'introSubheading' => 300,
+        'introDescription' => 10000,
+        'supportingText' => 10000,
+        'ctaLabel' => 160,
+        'ctaUrl' => 2048,
+    ] as $key => $limit) {
+        $version[$key] = partnership_string($value[$key] ?? '', $key, $limit);
+    }
+    if ($version['ctaUrl'] !== '' && !safe_link($version['ctaUrl'])) {
+        respond(['error' => 'The partnership call-to-action URL is invalid.'], 400);
+    }
+    $textOrder = $value['textOrder'] ?? ['title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'];
+    $allowedTextOrder = ['title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'];
+    if (!is_array($textOrder) || count($textOrder) > count($allowedTextOrder)) {
+        respond(['error' => 'Invalid partnership text order.'], 400);
+    }
+    $version['textOrder'] = [];
+    foreach ($textOrder as $field) {
+        if (!is_string($field) || !in_array($field, $allowedTextOrder, true) || in_array($field, $version['textOrder'], true)) {
+            respond(['error' => 'Invalid partnership text order.'], 400);
+        }
+        $version['textOrder'][] = $field;
+    }
+    foreach ($allowedTextOrder as $field) {
+        if (!in_array($field, $version['textOrder'], true)) {
+            $version['textOrder'][] = $field;
+        }
+    }
+
+    $categories = $value['categories'] ?? [];
+    $images = $value['images'] ?? [];
+    if (!is_array($categories) || count($categories) > 50 || !is_array($images) || count($images) > 50) {
+        respond(['error' => 'Partnership content has too many categories or images.'], 400);
+    }
+
+    $version['categories'] = [];
+    $categoryIds = [];
+    $partnerIds = [];
+    $partnerCount = 0;
+    foreach ($categories as $index => $category) {
+        if (!is_array($category)) {
+            respond(['error' => 'Invalid partnership category.'], 400);
+        }
+        $id = partnership_string($category['id'] ?? '', 'category ID', 100);
+        $name = partnership_string($category['name'] ?? '', 'category name', 240);
+        $description = partnership_string($category['description'] ?? '', 'category description', 5000);
+        if ($id === '' || in_array($id, $categoryIds, true)) {
+            respond(['error' => 'Partnership category IDs must be unique and non-empty.'], 400);
+        }
+        $categoryIds[] = $id;
+        $partners = $category['partners'] ?? [];
+        if (!is_array($partners) || ($partnerCount += count($partners)) > 500) {
+            respond(['error' => 'Partnership content has too many partner entries.'], 400);
+        }
+        $normalizedPartners = [];
+        foreach ($partners as $partner) {
+            if (!is_array($partner)) {
+                respond(['error' => 'Invalid partnership entry.'], 400);
+            }
+            $partnerId = partnership_string($partner['id'] ?? '', 'partner ID', 100);
+            $image = partnership_string($partner['image'] ?? '', 'image URL', 255);
+            $websiteUrl = partnership_string($partner['websiteUrl'] ?? '', 'website URL', 2048);
+            if ($partnerId === '' || in_array($partnerId, $partnerIds, true)) {
+                respond(['error' => 'Partnership entry IDs must be unique and non-empty.'], 400);
+            }
+            if ($image !== '' && !valid_partnership_image($image)) {
+                respond(['error' => 'Partnership images must use an approved uploaded image.'], 400);
+            }
+            if ($websiteUrl !== '' && !valid_website_url($websiteUrl)) {
+                respond(['error' => 'Partner website links must be valid HTTP or HTTPS URLs.'], 400);
+            }
+            $partnerIds[] = $partnerId;
+            $normalizedPartners[] = [
+                'id' => $partnerId,
+                'name' => partnership_string($partner['name'] ?? '', 'partner name', 240),
+                'image' => $image,
+                'description' => partnership_string($partner['description'] ?? '', 'partner description', 5000),
+                'websiteUrl' => $websiteUrl,
+                'displayOrder' => max(0, (int)($partner['displayOrder'] ?? 0)),
+                'published' => ($partner['published'] ?? false) === true,
+            ];
+        }
+        $version['categories'][] = [
+            'id' => $id,
+            'name' => $name,
+            'description' => $description,
+            'displayOrder' => max(0, (int)($category['displayOrder'] ?? $index)),
+            'published' => ($category['published'] ?? false) === true,
+            'partners' => $normalizedPartners,
+        ];
+    }
+
+    $version['images'] = [];
+    foreach ($images as $image) {
+        if (!is_array($image)) {
+            respond(['error' => 'Invalid additional partnership image.'], 400);
+        }
+        $url = partnership_string($image['image'] ?? '', 'image URL', 255);
+        if (!valid_partnership_image($url)) {
+            respond(['error' => 'Partnership images must use an approved uploaded image.'], 400);
+        }
+        $version['images'][] = [
+            'id' => partnership_string($image['id'] ?? '', 'image ID', 100),
+            'image' => $url,
+            'name' => partnership_string($image['name'] ?? '', 'image name', 240),
+            'published' => ($image['published'] ?? false) === true,
+            'displayOrder' => max(0, (int)($image['displayOrder'] ?? 0)),
+        ];
+    }
+    return $version;
+}
+
+function normalize_partnership_section(mixed $value): ?array
+{
+    if ($value === null) {
+        return null;
+    }
+    if (!is_array($value)) {
+        respond(['error' => 'Partnership section must be an object.'], 400);
+    }
+    return [
+        'draft' => normalize_partnership_version($value['draft'] ?? null),
+        'published' => normalize_partnership_version($value['published'] ?? null),
+    ];
+}
+
+function public_partnership_version(mixed $value): ?array
+{
+    if (!is_array($value)) {
+        return null;
+    }
+    $version = $value;
+    $categories = [];
+    foreach (($version['categories'] ?? []) as $category) {
+        if (!is_array($category) || ($category['published'] ?? false) !== true || trim((string)($category['name'] ?? '')) === '') {
+            continue;
+        }
+        $partners = [];
+        foreach (($category['partners'] ?? []) as $partner) {
+            if (!is_array($partner) || ($partner['published'] ?? false) !== true) {
+                continue;
+            }
+            $image = (string)($partner['image'] ?? '');
+            if ($image !== '' && !valid_partnership_image($image)) {
+                continue;
+            }
+            if ($image === '' && trim((string)($partner['name'] ?? '')) === '' && trim((string)($partner['description'] ?? '')) === '') {
+                continue;
+            }
+            if (!valid_website_url((string)($partner['websiteUrl'] ?? ''))) {
+                $partner['websiteUrl'] = '';
+            }
+            $partners[] = $partner;
+        }
+        if ($partners) {
+            $category['partners'] = $partners;
+            $categories[] = $category;
+        }
+    }
+    $version['categories'] = $categories;
+    $version['images'] = array_values(array_filter(
+        $version['images'] ?? [],
+        static fn($image): bool => is_array($image)
+            && ($image['published'] ?? false) === true
+            && valid_partnership_image((string)($image['image'] ?? ''))
+    ));
+
+    $hasText = false;
+    foreach (['title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'] as $key) {
+        if (trim((string)($version[$key] ?? '')) !== '') {
+            $hasText = true;
+            break;
+        }
+    }
+    if (!$hasText && !$categories && !$version['images']) {
+        return null;
+    }
+    $version['published'] = true;
+    return $version;
+}
+
 function clean_html_node(DOMElement $element): void
 {
     $allowed = ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'h2', 'h3', 'h4', 'blockquote', 'a', 'span', 'img'];
@@ -217,6 +437,10 @@ function sanitize_content(mixed $value): mixed
     if (is_array($value)) {
         foreach ($value as $key => $child) {
             if (in_array((string)$key, ['href', 'linkedinUrl'], true) && is_string($child) && !safe_link($child)) {
+                $value[$key] = '';
+                continue;
+            }
+            if ((string)$key === 'websiteUrl' && is_string($child) && $child !== '' && !valid_website_url($child)) {
                 $value[$key] = '';
                 continue;
             }

@@ -8,6 +8,18 @@
   let contentSyncTimer;
   let contentSyncInProgress = false;
   let contentSyncErrorReported = false;
+  let latestContent = null;
+
+  function cacheContent(data) {
+    latestContent = data;
+    const cachedData = { ...data };
+    if (authenticated) delete cachedData.partnershipSection;
+    try {
+      localStorage.setItem(DATA_KEY, JSON.stringify(cachedData));
+    } catch (error) {
+      console.warn('Website content was saved to the server but could not be cached in this browser.', error);
+    }
+  }
 
   async function request(url, options = {}, onResponse = () => {}) {
     const response = await fetch(url, {
@@ -41,10 +53,28 @@
 
     if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
     const serialized = JSON.stringify(data);
-    if (localStorage.getItem(DATA_KEY) === serialized) return false;
-    localStorage.setItem(DATA_KEY, serialized);
+    const cachedData = { ...data };
+    if (authenticated) delete cachedData.partnershipSection;
+    const cachedSerialized = JSON.stringify(cachedData);
+    latestContent = data;
+    try {
+      if (localStorage.getItem(DATA_KEY) === cachedSerialized) return false;
+      localStorage.setItem(DATA_KEY, cachedSerialized);
+    } catch (error) {
+      console.warn('Website content loaded from the server but could not be cached in this browser.', error);
+    }
     window.dispatchEvent(new CustomEvent('nvs-content-updated', { detail: { data } }));
     return true;
+  }
+
+  async function loadAdminContent() {
+    const data = await request('api/admin-content.php');
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('The admin content response is invalid.');
+    }
+    cacheContent(data);
+    window.dispatchEvent(new CustomEvent('nvs-content-updated', { detail: { data } }));
+    return data;
   }
 
   async function syncContent() {
@@ -110,6 +140,7 @@
     });
     csrfToken = result.csrfToken;
     authenticated = true;
+    contentEtag = '';
     return result;
   }
 
@@ -125,11 +156,13 @@
 
   async function saveContent(data) {
     await ensureCsrfToken();
-    return request('api/content.php', {
+    const result = await request('api/content.php', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
       body: JSON.stringify(data)
     });
+    cacheContent(data);
+    return result;
   }
 
   async function postInquiry(inquiry) {
@@ -174,11 +207,13 @@
     logout,
     saveContent,
     refreshContent,
+    loadAdminContent,
     postInquiry,
     listInquiries,
     listAuditLog,
     deleteInquiry,
     uploadImage,
+    getContentSnapshot: () => latestContent,
     hasToken: () => authenticated
   };
 })();

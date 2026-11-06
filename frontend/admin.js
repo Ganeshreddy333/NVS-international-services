@@ -11,10 +11,160 @@ const pageContentForm = document.querySelector('#page-content-form');
 const contentPage = document.querySelector('#content-page');
 const partnershipForm = document.querySelector('#partnership-form');
 const partnershipList = document.querySelector('#partnership-list');
+const partnershipCmsForm = document.querySelector('#partnership-cms-form');
+const partnershipCategoriesEditor = document.querySelector('#partnership-categories-editor');
+const partnershipExtraImagesEditor = document.querySelector('#partnership-extra-images-editor');
+const partnershipTextOrderEditor = document.querySelector('#partnership-text-order-editor');
 const pageSectionsBody = document.querySelector('#page-sections-body');
 
 const pageEditorKinds = { about: 'blocks', sponsors: 'blocks', general: 'accordion', home: 'home' };
+const partnershipTextLabels = {
+  title: 'Main heading',
+  introHeading: 'Intro heading',
+  introSubheading: 'Intro subheading',
+  introDescription: 'Introductory description',
+  supportingText: 'Supporting text'
+};
 let richEditorId = 0;
+
+function partnershipId(prefix) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function newPartnershipDraft() {
+  const categories = [
+    'Our Sponsors',
+    'Our Exhibitors',
+    'Our University & Academic Partners',
+    'Our Research & Institutional Partners',
+    'Our Media & Supporting Partners'
+  ];
+  return {
+    eyebrow: 'PARTNERSHIP / 13',
+    title: 'OUR SPONSORS, EXHIBITORS & PARTNERS',
+    introHeading: 'Recognizing Our Valued Partners',
+    introSubheading: '',
+    textOrder: Object.keys(partnershipTextLabels),
+    introDescription: 'NVS International Services appreciates the organizations and institutions that support our conferences and contribute to scientific exchange, academic collaboration, professional development, and technological innovation.\n\nWe value our relationships with companies, universities, research institutions, publishers, professional associations, and industry partners.',
+    supportingText: '',
+    ctaLabel: 'Sponsorship & exhibiting',
+    ctaUrl: 'sponsors.html',
+    categories: categories.map((name, index) => ({
+      id: partnershipId('category'),
+      name,
+      description: '',
+      displayOrder: index,
+      published: false,
+      partners: []
+    })),
+    images: []
+  };
+}
+
+function ensurePartnershipSection() {
+  if (!data.partnershipSection || typeof data.partnershipSection !== 'object') {
+    data.partnershipSection = { draft: newPartnershipDraft(), published: null };
+  }
+  if (!data.partnershipSection.draft || typeof data.partnershipSection.draft !== 'object') {
+    data.partnershipSection.draft = newPartnershipDraft();
+  }
+  const draft = data.partnershipSection.draft;
+  draft.categories = Array.isArray(draft.categories) ? draft.categories : [];
+  draft.images = Array.isArray(draft.images) ? draft.images : [];
+  const existingTextOrder = Array.isArray(draft.textOrder) ? draft.textOrder : [];
+  const validTextOrder = [...new Set(existingTextOrder.filter((key) => Object.hasOwn(partnershipTextLabels, key)))];
+  draft.textOrder = [
+    ...validTextOrder,
+    ...Object.keys(partnershipTextLabels).filter((key) => !validTextOrder.includes(key))
+  ];
+  return data.partnershipSection;
+}
+
+function renderPartnershipPartner(partner, index, total) {
+  const image = safeImageUrl(partner.image || '');
+  return `<article class="partnership-entry-editor" data-partnership-entry="${escapeHtml(partner.id)}">
+    <div class="partnership-editor-title"><span>Partner ${index + 1}</span><div class="partnership-editor-actions"><button type="button" data-partner-action="up" ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-partner-action="down" ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-partner-action="remove">Remove</button></div></div>
+    ${image ? `<img class="partnership-upload-preview" src="${escapeHtml(image)}" alt="">` : '<p class="muted">No logo uploaded.</p>'}
+    <div class="field"><label>Partner name</label><input data-partner-field="name" value="${escapeHtml(partner.name || '')}"></div>
+    <div class="field"><label>Description</label><textarea data-partner-field="description" rows="2">${escapeHtml(partner.description || '')}</textarea></div>
+    <div class="field"><label>Website URL (optional)</label><input type="url" inputmode="url" placeholder="https://example.org" data-partner-field="websiteUrl" value="${escapeHtml(partner.websiteUrl || '')}"></div>
+    <div class="field"><label>Replace logo</label><input type="file" accept="image/jpeg,image/png,image/gif,image/webp" data-partner-replace></div>
+    <label class="partnership-checkbox"><input type="checkbox" data-partner-field="published" ${partner.published ? 'checked' : ''}> Publish this partner</label>
+  </article>`;
+}
+
+function renderPartnershipCategory(category, index, total) {
+  const partners = Array.isArray(category.partners) ? category.partners : [];
+  return `<article class="partnership-category-editor" data-partnership-category="${escapeHtml(category.id)}">
+    <div class="partnership-editor-title"><strong>Category ${index + 1}</strong><div class="partnership-editor-actions"><button type="button" data-category-action="up" ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-category-action="down" ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-category-action="remove">Remove</button></div></div>
+    <div class="partnership-editor-grid">
+      <div class="field"><label>Category heading</label><input data-category-field="name" value="${escapeHtml(category.name || '')}"></div>
+      <div class="field"><label>Category description</label><input data-category-field="description" value="${escapeHtml(category.description || '')}"></div>
+    </div>
+    <label class="partnership-checkbox"><input type="checkbox" data-category-field="published" ${category.published ? 'checked' : ''}> Publish this category</label>
+    <div class="partnership-editor-heading"><strong>Partner entries</strong><div class="partnership-editor-actions"><label class="button button-ghost partnership-file-button" for="upload-${escapeHtml(category.id)}">Upload logos</label><input class="partnership-file-input" id="upload-${escapeHtml(category.id)}" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple data-partner-upload><button type="button" data-category-action="add-partner">Add partner</button></div></div>
+    <div>${partners.map((partner, partnerIndex) => renderPartnershipPartner(partner, partnerIndex, partners.length)).join('') || '<p class="muted">No partners added yet.</p>'}</div>
+  </article>`;
+}
+
+function renderPartnershipCms() {
+  const section = ensurePartnershipSection();
+  const draft = section.draft;
+  const fields = ['eyebrow', 'title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText', 'ctaLabel', 'ctaUrl'];
+  fields.forEach((key) => {
+    const field = partnershipCmsForm.querySelector(`[data-partnership-field="${key}"]`);
+    if (field) field.value = draft[key] || '';
+  });
+  partnershipTextOrderEditor.innerHTML = draft.textOrder.map((key, index) => `<div class="partnership-text-order-item" data-text-order-item="${key}"><strong>${escapeHtml(partnershipTextLabels[key])}</strong><div class="partnership-editor-actions"><button type="button" data-text-order-action="up" ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-text-order-action="down" ${index === draft.textOrder.length - 1 ? 'disabled' : ''}>Move down</button></div></div>`).join('');
+  partnershipCategoriesEditor.innerHTML = draft.categories.map((category, index) => renderPartnershipCategory(category, index, draft.categories.length)).join('')
+    || '<p class="muted">No categories yet. Add one to get started.</p>';
+  partnershipExtraImagesEditor.innerHTML = draft.images.map((image, index) => {
+    const src = safeImageUrl(image.image || '');
+    return `<article class="partnership-image-editor" data-partnership-image="${escapeHtml(image.id)}">${src ? `<img class="partnership-upload-preview" src="${escapeHtml(src)}" alt="">` : ''}<div class="field"><label>Image description</label><input data-image-field="name" value="${escapeHtml(image.name || '')}"></div><label class="partnership-checkbox"><input type="checkbox" data-image-field="published" ${image.published ? 'checked' : ''}> Publish this image</label><div class="partnership-editor-actions"><button type="button" data-image-action="up" ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-image-action="down" ${index === draft.images.length - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-image-action="remove">Remove</button></div></article>`;
+  }).join('') || '<p class="muted">No additional images uploaded.</p>';
+  const status = document.querySelector('#partnership-publish-status');
+  if (status) status.textContent = section.published ? 'A published version is live. Draft edits will not be public until published.' : 'The card is unpublished and hidden from public visitors.';
+}
+
+function collectPartnershipDraft() {
+  const section = ensurePartnershipSection();
+  const draft = { ...section.draft };
+  ['eyebrow', 'title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText', 'ctaLabel', 'ctaUrl'].forEach((key) => {
+    draft[key] = partnershipCmsForm.querySelector(`[data-partnership-field="${key}"]`).value;
+  });
+  draft.textOrder = [...partnershipTextOrderEditor.querySelectorAll('[data-text-order-item]')].map((item) => item.dataset.textOrderItem);
+  draft.categories = [...partnershipCategoriesEditor.querySelectorAll('[data-partnership-category]')].map((card, categoryIndex) => {
+    const prior = section.draft.categories.find((category) => category.id === card.dataset.partnershipCategory);
+    return {
+      id: card.dataset.partnershipCategory,
+      name: card.querySelector('[data-category-field="name"]').value,
+      description: card.querySelector('[data-category-field="description"]').value,
+      displayOrder: categoryIndex,
+      published: card.querySelector('[data-category-field="published"]').checked,
+      partners: [...card.querySelectorAll('[data-partnership-entry]')].map((partnerCard, partnerIndex) => ({
+        id: partnerCard.dataset.partnershipEntry,
+        name: partnerCard.querySelector('[data-partner-field="name"]').value,
+        image: prior?.partners?.find((partner) => partner.id === partnerCard.dataset.partnershipEntry)?.image || '',
+        description: partnerCard.querySelector('[data-partner-field="description"]').value,
+        websiteUrl: partnerCard.querySelector('[data-partner-field="websiteUrl"]').value.trim(),
+        displayOrder: partnerIndex,
+        published: partnerCard.querySelector('[data-partner-field="published"]').checked
+      }))
+    };
+  });
+  draft.images = [...partnershipExtraImagesEditor.querySelectorAll('[data-partnership-image]')].map((card, index) => {
+    const image = section.draft.images.find((item) => item.id === card.dataset.partnershipImage);
+    return {
+      id: card.dataset.partnershipImage,
+      image: image?.image || '',
+      name: card.querySelector('[data-image-field="name"]').value,
+      published: card.querySelector('[data-image-field="published"]').checked,
+      displayOrder: index
+    };
+  });
+  section.draft = draft;
+  return draft;
+}
 
 function syncRichEditors() {
   if (window.tinymce) tinymce.triggerSave();
@@ -285,6 +435,177 @@ function renderPartnerships() {
     renderPartnerships();
   }));
 }
+
+function movePartnershipItem(items, index, direction) {
+  const destination = index + direction;
+  if (destination < 0 || destination >= items.length) return;
+  [items[index], items[destination]] = [items[destination], items[index]];
+}
+
+async function uploadPartnershipImages(files, categoryId = '', partnerId = '', additional = false) {
+  const section = ensurePartnershipSection();
+  const draft = section.draft;
+  const category = draft.categories.find((item) => item.id === categoryId);
+  const partner = category?.partners.find((item) => item.id === partnerId);
+  let uploaded = 0;
+  for (const file of files) {
+    try {
+      if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+        throw new Error('Choose a JPEG, PNG, GIF, or WebP image.');
+      }
+      if (file.size < 1 || file.size > 5 * 1024 * 1024) {
+        throw new Error('Images must be no larger than 5 MB.');
+      }
+      const result = await NVS_API.uploadImage(file);
+      const name = file.name.replace(/\.[^.]+$/, '');
+      if (additional) {
+        draft.images.push({
+          id: partnershipId('image'),
+          image: result.location,
+          name,
+          published: false,
+          displayOrder: draft.images.length
+        });
+      } else if (partner) {
+        partner.image = result.location;
+      } else if (category) {
+        category.partners.push({
+          id: partnershipId('partner'),
+          name,
+          image: result.location,
+          description: '',
+          websiteUrl: '',
+          displayOrder: category.partners.length,
+          published: false
+        });
+      }
+      uploaded += 1;
+    } catch (error) {
+      showMessage(`Could not upload ${file.name}: ${error.message}`);
+    }
+  }
+  renderPartnershipCms();
+  if (uploaded) showMessage(`${uploaded} partnership image${uploaded === 1 ? '' : 's'} uploaded to the draft.`);
+}
+
+function handlePartnershipEditorClick(event) {
+  const button = event.target.closest('button');
+  if (!button) return;
+  const draft = collectPartnershipDraft();
+
+  if (button.id === 'partnership-add-category') {
+    draft.categories.push({
+      id: partnershipId('category'),
+      name: 'New category',
+      description: '',
+      displayOrder: draft.categories.length,
+      published: false,
+      partners: []
+    });
+    renderPartnershipCms();
+    return;
+  }
+  const textOrderItem = button.closest('[data-text-order-item]');
+  const textOrderAction = button.dataset.textOrderAction;
+  if (textOrderItem && textOrderAction) {
+    const index = draft.textOrder.indexOf(textOrderItem.dataset.textOrderItem);
+    movePartnershipItem(draft.textOrder, index, textOrderAction === 'up' ? -1 : 1);
+    renderPartnershipCms();
+    return;
+  }
+  const categoryCard = button.closest('[data-partnership-category]');
+  const categoryAction = button.dataset.categoryAction;
+  if (categoryCard && categoryAction) {
+    const index = draft.categories.findIndex((item) => item.id === categoryCard.dataset.partnershipCategory);
+    if (categoryAction === 'remove') draft.categories.splice(index, 1);
+    if (categoryAction === 'up' || categoryAction === 'down') movePartnershipItem(draft.categories, index, categoryAction === 'up' ? -1 : 1);
+    if (categoryAction === 'add-partner') {
+      const category = draft.categories[index];
+      category.partners.push({ id: partnershipId('partner'), name: '', image: '', description: '', websiteUrl: '', displayOrder: category.partners.length, published: false });
+    }
+    renderPartnershipCms();
+    return;
+  }
+  const partnerCard = button.closest('[data-partnership-entry]');
+  const partnerAction = button.dataset.partnerAction;
+  if (partnerCard && partnerAction) {
+    const category = draft.categories.find((item) => item.partners.some((partner) => partner.id === partnerCard.dataset.partnershipEntry));
+    if (!category) return;
+    const index = category.partners.findIndex((partner) => partner.id === partnerCard.dataset.partnershipEntry);
+    if (partnerAction === 'remove') category.partners.splice(index, 1);
+    if (partnerAction === 'up' || partnerAction === 'down') movePartnershipItem(category.partners, index, partnerAction === 'up' ? -1 : 1);
+    renderPartnershipCms();
+    return;
+  }
+  const imageCard = button.closest('[data-partnership-image]');
+  const imageAction = button.dataset.imageAction;
+  if (imageCard && imageAction) {
+    const index = draft.images.findIndex((image) => image.id === imageCard.dataset.partnershipImage);
+    if (imageAction === 'remove') draft.images.splice(index, 1);
+    if (imageAction === 'up' || imageAction === 'down') movePartnershipItem(draft.images, index, imageAction === 'up' ? -1 : 1);
+    renderPartnershipCms();
+  }
+}
+
+partnershipCmsForm.addEventListener('click', handlePartnershipEditorClick);
+partnershipCmsForm.addEventListener('change', async (event) => {
+  const input = event.target;
+  if (input.matches('[data-partner-upload]')) {
+    const categoryId = input.closest('[data-partnership-category]')?.dataset.partnershipCategory || '';
+    const files = Array.from(input.files || []);
+    if (files.length) {
+      collectPartnershipDraft();
+      await uploadPartnershipImages(files, categoryId);
+    }
+    input.value = '';
+  } else if (input.matches('[data-partner-replace]')) {
+    const categoryId = input.closest('[data-partnership-category]')?.dataset.partnershipCategory || '';
+    const partnerId = input.closest('[data-partnership-entry]')?.dataset.partnershipEntry || '';
+    if (input.files?.[0]) {
+      collectPartnershipDraft();
+      await uploadPartnershipImages([input.files[0]], categoryId, partnerId);
+    }
+  } else if (input.id === 'partnership-extra-upload') {
+    const files = Array.from(input.files || []);
+    if (files.length) {
+      collectPartnershipDraft();
+      await uploadPartnershipImages(files, '', '', true);
+    }
+    input.value = '';
+  }
+});
+
+document.querySelector('#partnership-preview-button').addEventListener('click', () => {
+  const draft = collectPartnershipDraft();
+  const previewWrap = document.querySelector('#partnership-preview-wrap');
+  document.querySelector('#partnership-preview').innerHTML = renderPartnershipSection(draft, true)
+    || '<p class="muted">Add partnership content to preview the card.</p>';
+  previewWrap.hidden = false;
+});
+
+partnershipCmsForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const draft = collectPartnershipDraft();
+  const action = event.submitter?.value || 'draft';
+  if (action === 'publish') {
+    data.partnershipSection.published = structuredClone(draft);
+  }
+  const saved = await saveAdminData(action === 'publish' ? 'Partnership card published.' : 'Partnership draft saved.');
+  if (saved) {
+    document.querySelector('#partnership-publish-status').textContent = action === 'publish'
+      ? 'Published. The public homepage now reflects this content.'
+      : data.partnershipSection.published
+        ? 'Draft saved. The previously published version remains live.'
+        : 'Draft saved. The card remains hidden from public visitors.';
+  }
+});
+
+document.querySelector('#partnership-unpublish-button').addEventListener('click', async () => {
+  collectPartnershipDraft();
+  data.partnershipSection.published = null;
+  const saved = await saveAdminData('Partnership card unpublished and hidden from visitors.');
+  if (saved) renderPartnershipCms();
+});
 
 function fillPageContentForm() {
   const content = getPageContent(contentPage.value);
@@ -571,11 +892,30 @@ renderPageSections();
 renderEvents();
 renderInquiries();
 renderPartnerships();
+renderPartnershipCms();
 bindAdminViews();
 initRichEditors();
+if (window.NVS_ADMIN_CONTENT_ERROR) showMessage(`Could not load saved admin content: ${window.NVS_ADMIN_CONTENT_ERROR}`);
 
 // After a successful login the API token exists, so reload enquiries from the server.
-window.addEventListener('admin-authenticated', () => {
+window.addEventListener('admin-authenticated', async () => {
   renderInquiries();
   if (window.location.hash === '#settings-view') loadAuditLog();
+  try {
+    await NVS_API.loadAdminContent();
+    if (NVS_API.getContentSnapshot()) {
+      const latest = getSiteData();
+      Object.keys(data).forEach((key) => delete data[key]);
+      Object.assign(data, latest);
+      data.partnerships = Array.isArray(data.partnerships) ? data.partnerships : [];
+      renderPartnerships();
+      renderPartnershipCms();
+      renderEvents();
+      renderPageSections();
+      fillCompanyForm();
+      fillPageContentForm();
+    }
+  } catch (error) {
+    showMessage(`Could not load saved partnership content: ${error.message}`);
+  }
 });

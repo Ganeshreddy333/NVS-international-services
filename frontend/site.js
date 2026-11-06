@@ -1395,7 +1395,10 @@ Whether you need assistance with registration, abstracts, speakers, payments, vi
 
 function getSiteData() {
   try {
-    const savedData = JSON.parse(localStorage.getItem('nvs-site-data'));
+    const snapshot = window.NVS_API?.getContentSnapshot?.();
+    const savedData = snapshot && typeof snapshot === 'object'
+      ? snapshot
+      : JSON.parse(localStorage.getItem('nvs-site-data'));
     const baseData = structuredClone(defaultSiteData);
     if (!savedData) return baseData;
 
@@ -1446,11 +1449,6 @@ function saveSiteData(data) {
   const request = siteDataSaveQueue.then(() => NVS_API.saveContent(snapshot));
   siteDataSaveQueue = request.catch(() => {});
   return request.then(() => {
-    try {
-      localStorage.setItem('nvs-site-data', serialized);
-    } catch (error) {
-      console.warn('Website changes were saved to the server but could not be cached in this browser.', error);
-    }
     return 'server';
   });
 }
@@ -1610,6 +1608,68 @@ function safeLink(value = '') {
   const scheme = url.match(/^([a-z][a-z0-9+.-]*):/i)?.[1]?.toLowerCase();
   if (!url || /[\u0000-\u0020\\]/.test(url) || url.startsWith('//')) return '#';
   return !scheme || ['http', 'https', 'mailto', 'tel'].includes(scheme) ? url : '#';
+}
+
+function safePartnerWebsite(value = '') {
+  try {
+    const url = new URL(String(value));
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function renderPartnershipSection(section, preview = false) {
+  if (!section || typeof section !== 'object') return '';
+
+  const categories = (Array.isArray(section.categories) ? section.categories : [])
+    .filter((category) => category && (preview || category.published === true))
+    .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0))
+    .map((category) => {
+      const partners = (Array.isArray(category.partners) ? category.partners : [])
+        .filter((partner) => partner && (preview || partner.published === true))
+        .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0))
+        .filter((partner) => safeImageUrl(partner.image || '') || String(partner.name || '').trim() || String(partner.description || '').trim());
+      if (!partners.length && !String(category.description || '').trim()) return '';
+      return `<section class="partnership-category"><div class="partnership-category-heading"><h3>${escapeHtml(category.name || '')}</h3>${category.description ? `<div class="partnership-category-description">${renderRichBody(category.description)}</div>` : ''}</div>${partners.length ? `<div class="partnership-logo-grid">${partners.map((partner) => {
+        const image = safeImageUrl(partner.image || '');
+        const link = safePartnerWebsite(partner.websiteUrl || '');
+        const logo = image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(partner.name || '')}" loading="lazy" decoding="async">` : '';
+        const logoContent = link && image ? `<a class="partnership-logo-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(partner.name || 'Partner website')}">${logo}</a>` : logo ? `<div class="partnership-logo">${logo}</div>` : '';
+        return `<article class="partnership-partner">${logoContent}${partner.name ? `<h4>${escapeHtml(partner.name)}</h4>` : ''}${partner.description ? `<div class="partnership-partner-description">${renderRichBody(partner.description)}</div>` : ''}${link && !image && partner.name ? `<a class="partnership-website-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Visit website ↗</a>` : ''}</article>`;
+      }).join('')}</div>` : ''}</section>`;
+    }).filter(Boolean).join('');
+
+  const images = (Array.isArray(section.images) ? section.images : [])
+    .filter((image) => image && (preview || image.published === true))
+    .sort((a, b) => Number(a.displayOrder || 0) - Number(b.displayOrder || 0))
+    .map((image) => {
+      const src = safeImageUrl(image.image || '');
+      return src ? `<figure class="partnership-extra-image"><img src="${escapeHtml(src)}" alt="${escapeHtml(image.name || '')}" loading="lazy" decoding="async">${image.name ? `<figcaption>${escapeHtml(image.name)}</figcaption>` : ''}</figure>` : '';
+    }).filter(Boolean).join('');
+
+  const textBlocks = {
+    title: section.title ? `<h2 class="partnership-main-title">${escapeHtml(section.title)}</h2>` : '',
+    introHeading: section.introHeading ? `<h3 class="partnership-intro-heading">${escapeHtml(section.introHeading)}</h3>` : '',
+    introSubheading: section.introSubheading ? `<p class="partnership-intro-subheading">${escapeHtml(section.introSubheading)}</p>` : '',
+    introDescription: section.introDescription ? `<div class="partnership-introduction">${renderRichBody(section.introDescription)}</div>` : '',
+    supportingText: section.supportingText ? `<div class="partnership-supporting-text">${renderRichBody(section.supportingText)}</div>` : ''
+  };
+  const defaultTextOrder = ['title', 'introHeading', 'introSubheading', 'introDescription', 'supportingText'];
+  const textOrder = (Array.isArray(section.textOrder) ? section.textOrder : defaultTextOrder)
+    .filter((key, index, order) => Object.hasOwn(textBlocks, key) && order.indexOf(key) === index);
+  defaultTextOrder.forEach((key) => {
+    if (!textOrder.includes(key)) textOrder.push(key);
+  });
+  const intro = textOrder
+    .some((key) => String(section[key] || '').trim());
+  if (!intro && !categories && !images) return '';
+  const ctaUrl = safeLink(section.ctaUrl || '');
+  const cta = section.ctaLabel && ctaUrl !== '#'
+    ? `<a class="home-content-button partnership-cta" href="${escapeHtml(ctaUrl)}">${escapeHtml(section.ctaLabel)} <span>↗</span></a>`
+    : '';
+
+  return `<section class="home-content-section home-partnership${preview ? ' partnership-preview-content' : ''}"${preview ? '' : ' id="home-partnership-section"'}><div class="home-content-kicker">${escapeHtml(section.eyebrow || 'PARTNERSHIP / 13')}</div>${textOrder.map((key) => textBlocks[key]).join('')}${categories ? `<div class="partnership-categories">${categories}</div>` : ''}${images ? `<div class="partnership-extra-images">${images}</div>` : ''}${cta}</section>`;
 }
 
 function renderAccordion(sections = []) {

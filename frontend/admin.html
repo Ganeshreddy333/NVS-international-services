@@ -13,7 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=20260928-3">
-  <link rel="stylesheet" href="pages.css?v=20261012-whatsapp">
+  <link rel="stylesheet" href="pages.css?v=20261106-partnership-cms">
+  <link rel="stylesheet" href="partnership.css?v=20261106-cms">
   <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -41,7 +42,7 @@
       <a class="active" href="#content-view" data-admin-view="content-view">Content</a>
       <a href="#information-view" data-admin-view="information-view">Website Information</a>
       <a href="#conference-view" data-admin-view="conference-view">Conferences</a>
-      <a href="#partnership-view" data-admin-view="partnership-view">Sponsors / Exhibitors</a>
+      <a href="#partnership-view" data-admin-view="partnership-view">Partnership / 13</a>
       <a href="#media-view" data-admin-view="media-view">Media / Gallery</a>
       <a href="#enquiries-view" data-admin-view="enquiries-view">Enquiries</a>
       <a href="#settings-view" data-admin-view="settings-view">Settings</a>
@@ -142,19 +143,58 @@
         </aside>
       </div>
       </div>
-      <div class="admin-view" id="partnership-view"><section class="admin-card"><h2>Sponsors and Exhibitors</h2><p class="muted">Add, edit, or remove sponsorship and exhibition packages independently from conferences and gallery media.</p><form id="partnership-form" class="partnership-form"><input type="hidden" id="partnership-id"><div class="field"><label for="partnership-type">Type</label><select id="partnership-type"><option value="sponsor">Sponsor</option><option value="exhibitor">Exhibitor</option></select></div><div class="field"><label for="partnership-name">Name</label><input id="partnership-name" required></div><div class="field"><label for="partnership-price">Price</label><input id="partnership-price" required></div><div class="field"><label for="partnership-title">Heading</label><input id="partnership-title" required></div><div class="field"><label for="partnership-description">Description</label><textarea class="rich-editor" id="partnership-description" required></textarea></div><div class="field"><label for="partnership-benefits">Benefits, one per line</label><textarea id="partnership-benefits" required></textarea></div><button class="button button-lime" type="submit"><span id="partnership-submit-label">Add Package</span> <span>↗</span></button><button class="button button-ghost clear-button" id="partnership-clear" type="button">Clear</button></form><div id="partnership-list" class="partnership-list"></div></section></div>
+      <div class="admin-view" id="partnership-view">
+        <section class="admin-card partnership-cms" id="partnership-cms">
+          <h2>Partnership / 13 Content</h2>
+          <p class="muted">Manage the homepage partner card. Drafts are private; only the published snapshot is sent to public visitors.</p>
+          <form id="partnership-cms-form">
+            <div class="partnership-editor-grid">
+              <div class="field"><label for="partnership-cms-eyebrow">Section label</label><input id="partnership-cms-eyebrow" data-partnership-field="eyebrow"></div>
+              <div class="field"><label for="partnership-cms-title">Main heading</label><input id="partnership-cms-title" data-partnership-field="title"></div>
+              <div class="field"><label for="partnership-cms-intro-heading">Intro heading</label><input id="partnership-cms-intro-heading" data-partnership-field="introHeading"></div>
+              <div class="field"><label for="partnership-cms-subheading">Intro subheading</label><input id="partnership-cms-subheading" data-partnership-field="introSubheading"></div>
+              <div class="field partnership-editor-wide"><label for="partnership-cms-description">Introductory description</label><textarea id="partnership-cms-description" data-partnership-field="introDescription" rows="4"></textarea></div>
+              <div class="field partnership-editor-wide"><label for="partnership-cms-supporting">Supporting text (separate paragraphs with a blank line)</label><textarea id="partnership-cms-supporting" data-partnership-field="supportingText" rows="4"></textarea></div>
+              <div class="field"><label for="partnership-cms-cta-label">Call-to-action label (optional)</label><input id="partnership-cms-cta-label" data-partnership-field="ctaLabel"></div>
+              <div class="field"><label for="partnership-cms-cta-url">Call-to-action URL (optional)</label><input id="partnership-cms-cta-url" inputmode="url" placeholder="sponsors.html or https://example.org" data-partnership-field="ctaUrl"></div>
+            </div>
+            <div class="partnership-editor-heading"><div><h3>Text display order</h3><p class="muted">Choose the order of the heading and introductory text.</p></div></div>
+            <div id="partnership-text-order-editor" class="partnership-text-order"></div>
+            <div class="partnership-editor-heading"><div><h3>Partner categories</h3><p class="muted">Reorder categories and partners with the move controls. Publish individual categories and partner entries as needed.</p></div><button class="button button-ghost" id="partnership-add-category" type="button">Add category</button></div>
+            <div id="partnership-categories-editor"></div>
+            <div class="partnership-editor-heading"><div><h3>Additional partnership images</h3><p class="muted">Upload supporting images; each image can be published or kept in the draft.</p></div><label class="button button-ghost partnership-file-button" for="partnership-extra-upload">Upload images</label><input class="partnership-file-input" id="partnership-extra-upload" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple></div>
+            <div id="partnership-extra-images-editor"></div>
+            <div class="partnership-form-actions">
+              <button class="button button-ghost" type="button" id="partnership-preview-button">Preview draft</button>
+              <button class="button button-ghost" type="submit" name="partnership-action" value="draft">Save draft</button>
+              <button class="button button-lime" type="submit" name="partnership-action" value="publish">Publish card <span>↗</span></button>
+              <button class="button button-ghost" type="button" id="partnership-unpublish-button">Unpublish card</button>
+            </div>
+            <p class="partnership-publish-status" id="partnership-publish-status" aria-live="polite"></p>
+          </form>
+          <div class="partnership-preview-wrap" id="partnership-preview-wrap" hidden><h3>Draft preview</h3><div id="partnership-preview"></div></div>
+        </section>
+        <section class="admin-card"><h2>Sponsorship and Exhibition Packages</h2><p class="muted">Manage existing sponsorship and exhibition packages independently from the homepage Partnership / 13 content.</p><form id="partnership-form" class="partnership-form"><input type="hidden" id="partnership-id"><div class="field"><label for="partnership-type">Type</label><select id="partnership-type"><option value="sponsor">Sponsor</option><option value="exhibitor">Exhibitor</option></select></div><div class="field"><label for="partnership-name">Name</label><input id="partnership-name" required></div><div class="field"><label for="partnership-price">Price</label><input id="partnership-price" required></div><div class="field"><label for="partnership-title">Heading</label><input id="partnership-title" required></div><div class="field"><label for="partnership-description">Description</label><textarea id="partnership-description" required></textarea></div><div class="field"><label for="partnership-benefits">Benefits, one per line</label><textarea id="partnership-benefits" required></textarea></div><button class="button button-lime" type="submit"><span id="partnership-submit-label">Add Package</span> <span>↗</span></button><button class="button button-ghost clear-button" id="partnership-clear" type="button">Clear</button></form><div id="partnership-list" class="partnership-list"></div></section>
+      </div>
       <div class="admin-view" id="media-view"><section class="admin-card" id="gallery-manager"><h2>Event Gallery Manager</h2><p class="muted">Choose an event, then upload images for the matching conference gallery. Changes sync to the website when you are signed in and the server is available.</p><div class="field" style="max-width:520px;margin-top:22px"><label for="gallery-event">Choose event</label><select id="gallery-event"></select></div><div class="upload-box"><input id="gallery-upload" type="file" accept="image/*" multiple><p class="muted" style="margin-top:10px">Upload images for the selected event</p></div><div id="gallery-preview" class="gallery-preview"></div></section></div>
       <div class="admin-view" id="enquiries-view"><section class="admin-card" id="inquiry-manager"><h2>Contact Enquiries</h2><div class="inquiry-list"></div></section></div>
       <div class="admin-view" id="settings-view"><section class="admin-card"><h2>Settings</h2><p class="muted">Website content is saved to the server so changes are shared with visitors. Use the admin controls to update content, conferences, media, and enquiries.</p><button class="button button-ghost admin-logout" id="settings-logout" type="button">Sign Out</button></section><section class="admin-card"><h2>Admin Activity</h2><p class="muted">Recent content changes, including the administrator and before/after values.</p><button class="button button-ghost" id="refresh-audit-log" type="button">Refresh activity</button><div id="admin-audit-log" aria-live="polite"><p class="muted">Open Settings to load recent activity.</p></div></section></div>
     </main>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="api.js?v=20261105-live-sync"></script>
+  <script src="api.js?v=20261106-partnership-cms"></script>
   <script>
-    // Pull the latest content from the backend into localStorage first, then
-    // load the admin scripts in order (admin.js reads content synchronously).
-    (window.NVS_API && NVS_API.bootstrap ? NVS_API.bootstrap() : Promise.resolve()).finally(() => {
-      ['site.js?v=20261105-live-sync', 'auth.js?v=20260928-api', 'admin.js?v=20261105-audit-log'].reduce(
+    // Load public content first, then fetch the private admin snapshot if this session is authenticated.
+    (async () => {
+      if (window.NVS_API && NVS_API.bootstrap) await NVS_API.bootstrap();
+      if (window.NVS_API && NVS_API.hasToken()) {
+        try {
+          await NVS_API.loadAdminContent();
+        } catch (error) {
+          window.NVS_ADMIN_CONTENT_ERROR = error.message;
+        }
+      }
+      ['site.js?v=20261106-partnership-cms', 'auth.js?v=20260928-api', 'admin.js?v=20261106-partnership-cms'].reduce(
         (chain, src) => chain.then(() => new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;
@@ -162,7 +202,7 @@
           script.onerror = reject;
           document.body.appendChild(script);
         })), Promise.resolve());
-    });
+    })().catch((error) => console.error(`Could not initialize the admin panel: ${error.message}`));
   </script>
 </body>
 </html>

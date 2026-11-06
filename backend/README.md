@@ -34,6 +34,7 @@ Use the same `NVS_CONFIG_FILE` setting with `php backend/seed.php`.
 | POST | `api/login.php` | Public + CSRF | Verify admin credentials and start a PHP session |
 | POST | `api/logout.php` | Admin + CSRF | End the PHP session |
 | GET | `api/content.php` | Public | Load shared site content |
+| GET | `api/admin-content.php` | Admin | Load editable content, including unpublished drafts |
 | PUT | `api/content.php` | Admin + CSRF | Save sanitized site content |
 | GET | `api/audit.php` | Admin | List the 50 most recent content changes |
 | POST | `api/inquiries.php` | Public + CSRF | Save a contact enquiry |
@@ -44,6 +45,8 @@ Use the same `NVS_CONFIG_FILE` setting with `php backend/seed.php`.
 The API is same-origin and uses PHP session cookies; no JWT, CORS configuration, or Node.js server is required.
 
 Public content responses include an ETag. Frontend pages revalidate it every 10 seconds (and when a background tab becomes active), download content only after a change, and update the rendered page automatically. Updates made in another tab are also applied through the browser storage event. Admin content updates and enquiry deletions are written to `admin_audit_log` in the same transaction and can be reviewed in Admin > Settings.
+
+Partnership / 13 uses the existing `site_content` JSON document. Its editable draft and last published snapshot are stored separately; public `GET api/content.php` responses include only the published snapshot, approved uploaded images, and published categories/partners. Admins load editable content through `GET api/admin-content.php`; publishing or unpublishing uses the authenticated, CSRF-protected content update API. Partner logos and supporting images use the existing validated upload endpoint and `uploads/gallery/` storage. Public rendering accepts only uploaded image paths and HTTP(S) partner website URLs.
 
 ## Local server
 

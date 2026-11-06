@@ -8,7 +8,17 @@ if ($method === 'GET') {
         $statement = database()->query('SELECT data FROM site_content WHERE id = 1');
         $row = $statement->fetch();
         $storedData = $row ? (string)$row['data'] : '{}';
-        $etag = '"' . hash('sha256', $storedData) . '"';
+        $content = json_decode($storedData, true, 64, JSON_THROW_ON_ERROR);
+        if (!is_array($content)) {
+            throw new UnexpectedValueException('Stored content must be a JSON object.');
+        }
+        $content = sanitize_content($content);
+        if (array_key_exists('partnershipSection', $content)) {
+            $section = normalize_partnership_section($content['partnershipSection']);
+            $content['partnershipSection'] = public_partnership_version($section['published'] ?? null);
+        }
+        $responseBody = json_encode($content, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        $etag = '"' . hash('sha256', $responseBody) . '"';
         header('ETag: ' . $etag);
         header('Vary: If-None-Match');
         $providedEtags = array_map('trim', explode(',', $_SERVER['HTTP_IF_NONE_MATCH'] ?? ''));
@@ -16,12 +26,8 @@ if ($method === 'GET') {
             http_response_code(304);
             exit;
         }
-
-        $content = json_decode($storedData, true, 64, JSON_THROW_ON_ERROR);
-        if (!is_array($content)) {
-            throw new UnexpectedValueException('Stored content must be a JSON object.');
-        }
-        respond(sanitize_content($content));
+        echo $responseBody;
+        exit;
     } catch (Throwable $error) {
         error_log('NVS content load failed: ' . $error->getMessage());
         respond(['error' => 'Could not load website content.'], 500);
@@ -34,7 +40,14 @@ if ($method !== 'PUT') {
 
 require_admin();
 require_csrf();
-$content = sanitize_content(request_data());
+$incoming = request_data(10_000_000);
+if (array_key_exists('partnershipSection', $incoming)) {
+    normalize_partnership_section($incoming['partnershipSection']);
+}
+$content = sanitize_content($incoming);
+if (array_key_exists('partnershipSection', $content)) {
+    $content['partnershipSection'] = normalize_partnership_section($content['partnershipSection']);
+}
 try {
     $connection = database();
     $connection->beginTransaction();

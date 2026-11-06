@@ -1,0 +1,362 @@
+#home-partnership-mount[hidden],
+.partnership-preview-wrap[hidden] {
+  display: none !important;
+}
+
+.home-partnership {
+  background: #fffaf4;
+  color: #4d392f;
+}
+
+.home-partnership .home-content-kicker {
+  margin-bottom: 20px;
+}
+
+.partnership-main-title {
+  max-width: 1000px;
+  color: #4d392f;
+  font-size: clamp(30px, 4.5vw, 58px);
+  font-weight: 800;
+  line-height: 1.08;
+}
+
+.partnership-intro-heading {
+  margin-top: 24px;
+  color: #a9543e;
+  font-size: clamp(20px, 2.4vw, 28px);
+  letter-spacing: -.025em;
+}
+
+.partnership-intro-subheading {
+  margin-top: 12px;
+  color: #6a5b51;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.partnership-introduction,
+.partnership-supporting-text {
+  max-width: 900px;
+  margin-top: 16px;
+  color: #6a5b51;
+}
+
+.partnership-introduction p,
+.partnership-supporting-text p,
+.partnership-category-description p,
+.partnership-partner-description p {
+  margin: 0 0 12px;
+}
+
+.partnership-categories {
+  display: grid;
+  gap: 34px;
+  margin-top: 48px;
+}
+
+.partnership-category {
+  padding-top: 28px;
+  border-top: 1px solid #ead9cc;
+}
+
+.partnership-category-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.partnership-category-heading h3 {
+  color: #553a31;
+  font-size: clamp(19px, 2vw, 25px);
+}
+
+.partnership-category-description {
+  max-width: 540px;
+  color: #6a5b51;
+  font-size: 13px;
+}
+
+.partnership-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+}
+
+.partnership-partner {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #eaded7;
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+}
+
+.partnership-logo,
+.partnership-logo-link {
+  display: grid;
+  min-height: 120px;
+  place-items: center;
+  margin-bottom: 14px;
+  border-radius: 7px;
+  background: #fffaf5;
+}
+
+.partnership-logo img,
+.partnership-logo-link img {
+  display: block;
+  width: 100%;
+  max-width: 210px;
+  height: 110px;
+  object-fit: contain;
+}
+
+.partnership-partner h4 {
+  margin: 0;
+  color: #553a31;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.partnership-partner-description {
+  margin-top: 8px;
+  color: #6a5b51;
+  font-size: 12px;
+}
+
+.partnership-website-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #a9543e;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.partnership-extra-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 36px;
+}
+
+.partnership-extra-image {
+  margin: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.partnership-extra-image img {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+}
+
+.partnership-extra-image figcaption {
+  padding: 10px 14px;
+  color: #6a5b51;
+  font-size: 12px;
+}
+
+.partnership-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 18px;
+}
+
+.partnership-editor-wide {
+  grid-column: 1 / -1;
+}
+
+.partnership-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 24px 0 16px;
+}
+
+.partnership-editor-heading h3,
+.partnership-preview-wrap h3 {
+  margin: 0 0 6px;
+}
+
+.partnership-editor-heading p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.partnership-category-editor,
+.partnership-entry-editor,
+.partnership-image-editor {
+  margin-bottom: 14px;
+  padding: 18px;
+  border: 1px solid #e3eaf2;
+  border-radius: 9px;
+  background: #fbfdff;
+}
+
+.partnership-entry-editor,
+.partnership-image-editor {
+  margin-left: 18px;
+  background: #fff;
+}
+
+.partnership-editor-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #14365e;
+  font-weight: 800;
+}
+
+.partnership-editor-actions,
+.partnership-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.partnership-text-order {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.partnership-text-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e3eaf2;
+  border-radius: 8px;
+  background: #fbfdff;
+  color: #14365e;
+  font-size: 13px;
+}
+
+.partnership-editor-actions button,
+.partnership-editor-title button {
+  border: 1px solid #cdd8e5;
+  border-radius: 7px;
+  background: #fff;
+  color: #14365e;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.partnership-editor-actions button.delete,
+.partnership-editor-title button.delete {
+  border-color: #e6bcbc;
+  color: #b4331f;
+}
+
+.partnership-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: #14365e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.partnership-checkbox input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.partnership-file-button {
+  cursor: pointer;
+}
+
+.partnership-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.partnership-upload-preview {
+  width: 120px;
+  height: 70px;
+  margin: 0 0 12px;
+  object-fit: contain;
+  border: 1px solid #e3eaf2;
+  background: #fff;
+}
+
+.partnership-publish-status {
+  margin-top: 12px;
+  color: #66758a;
+  font-size: 13px;
+}
+
+.partnership-preview-wrap {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e3eaf2;
+}
+
+.partnership-preview-content {
+  padding: 38px 28px;
+  border: 1px solid #e3eaf2;
+  border-radius: 10px;
+}
+
+@media (max-width: 680px) {
+  .partnership-category-heading {
+    display: block;
+  }
+
+  .partnership-category-description {
+    margin-top: 8px;
+  }
+
+  .partnership-logo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .partnership-partner {
+    padding: 12px;
+  }
+
+  .partnership-logo,
+  .partnership-logo-link {
+    min-height: 92px;
+  }
+
+  .partnership-logo img,
+  .partnership-logo-link img {
+    height: 82px;
+  }
+
+  .partnership-editor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .partnership-editor-wide {
+    grid-column: auto;
+  }
+
+  .partnership-editor-heading {
+    align-items: flex-start;
+  }
+
+  .partnership-entry-editor,
+  .partnership-image-editor {
+    margin-left: 0;
+  }
+}
