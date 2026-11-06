@@ -8,7 +8,7 @@ Responsive website and admin panel for NVS International Services, built for PHP
 - **Backend:** PHP 8.2+
 - **Database:** MySQL through PDO
 - **Admin authentication:** PHP sessions with CSRF protection
-- **Rich text:** TinyMCE
+- **Content editing:** standard HTML textareas
 - **Gallery:** validated PHP image uploads
 - **Hosting target:** Hostinger
 
@@ -70,13 +70,13 @@ The repository root is prepared for Hostinger's Apache web root. Deploy the repo
    Run the migration before switching the domain to the new deployment. See [`backend/README.md`](backend/README.md) for SSH paths and migration details.
 7. Open `https://your-domain.example/admin.html` and sign in with the account created by `seed.php`.
 
-The TinyMCE script uses a development key. Before launch, replace the `no-api-key` value in `frontend/admin.html` with a TinyMCE Cloud API key for the production domain. The TinyMCE key is public browser configuration, not a database credential. Uploaded image files are limited to 5 MB after browser-side resizing; Hostinger's PHP upload limits must allow at least that size.
+Uploaded gallery image files are limited to 5 MB after browser-side resizing; Hostinger's PHP upload limits must allow at least that size.
 
 ## Data and security
 
 - Admin edits are stored in the MySQL `site_content` row and are shared with all visitors.
 - Admin credentials are stored as PHP `password_hash()` hashes. Existing bcrypt hashes from the previous Node.js setup remain verifiable.
-- State-changing API calls use same-origin PHP sessions and CSRF tokens. SQL uses PDO prepared statements, and rich text is sanitized on save and load.
+- State-changing API calls use same-origin PHP sessions and CSRF tokens. SQL uses PDO prepared statements, and saved HTML content is sanitized on save and load.
 - Contact enquiries are stored in MySQL and visible in the admin panel.
 - Gallery uploads are checked as JPEG, PNG, GIF, or WebP images and stored with random filenames outside executable paths.
 

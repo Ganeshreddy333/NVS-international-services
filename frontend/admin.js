@@ -28,7 +28,6 @@ const partnershipTextLabels = {
   introDescription: 'Introductory description',
   supportingText: 'Supporting text'
 };
-let richEditorId = 0;
 
 function partnershipId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -167,54 +166,9 @@ function collectPartnershipDraft() {
   return draft;
 }
 
-function syncRichEditors() {
-  if (window.tinymce) tinymce.triggerSave();
-}
-
-function validateRichEditors(form) {
-  syncRichEditors();
-  for (const field of form.querySelectorAll('textarea.rich-editor')) {
-    if ((field.required || field.dataset.richRequired === 'true') && !field.value.trim()) {
-      showMessage('Please complete all required rich-text fields.');
-      window.tinymce?.get(field.id)?.focus();
-      return false;
-    }
-  }
-  return true;
-}
-
-function setRichEditorValue(selector, value) {
+function setTextareaValue(selector, value) {
   const field = document.querySelector(selector);
-  if (!field) return;
-  const editor = window.tinymce?.get(field.id);
-  if (editor) editor.setContent(value || '');
-  else field.value = value || '';
-}
-
-function initRichEditors(root = document) {
-  if (!window.tinymce) return;
-  root.querySelectorAll('textarea.rich-editor').forEach((field) => {
-    if (!field.id) field.id = `nvs-rich-editor-${++richEditorId}`;
-    if (tinymce.get(field.id)) return;
-    if (field.required) {
-      field.dataset.richRequired = 'true';
-      field.required = false;
-    }
-    tinymce.init({
-      target: field,
-      menubar: false,
-      branding: false,
-      promotion: false,
-      height: 240,
-      plugins: 'lists link image',
-      toolbar: 'undo redo | blocks | bold italic | bullist numlist | link image',
-      images_upload_handler: async (blobInfo) => {
-        const file = new File([blobInfo.blob()], blobInfo.filename(), { type: blobInfo.blob().type });
-        const result = await NVS_API.uploadImage(file);
-        return result.location;
-      }
-    });
-  });
+  if (field) field.value = value || '';
 }
 
 function makeSectionId() {
@@ -235,10 +189,10 @@ function blockCardSkeleton(index, total) {
     <div class="field"><label>Style</label><select data-field="variant"><option value="">Standard</option><option value="opening">Opening</option><option value="vision">Highlight</option><option value="closing">Closing</option></select></div>
     <div class="field"><label>Kicker / label</label><input data-field="kicker"></div>
     <div class="field"><label>Heading</label><input data-field="heading"></div>
-    <div class="field"><label>Body</label><textarea class="rich-editor" data-field="body" rows="4"></textarea></div>
+    <div class="field"><label>Body</label><textarea data-field="body" rows="4"></textarea></div>
     <div class="field"><label>List style</label><select data-field="listStyle"><option value="none">No list</option><option value="topic">Bullet list</option><option value="definition">Term + description</option></select></div>
     <div class="field"><label>List items (one per line; for Term + description use "Term :: description")</label><textarea data-field="listItems" rows="4"></textarea></div>
-    <div class="field"><label>Extra text after the list (optional)</label><textarea class="rich-editor" data-field="bodyAfter" rows="2"></textarea></div>
+    <div class="field"><label>Extra text after the list (optional)</label><textarea data-field="bodyAfter" rows="2"></textarea></div>
   </article>`;
 }
 
@@ -247,8 +201,8 @@ function accordionCardSkeleton(index, total) {
     <div class="page-section-head"><strong>Topic ${index + 1}</strong><div class="event-actions"><button type="button" data-topic-preview>Preview</button><button type="button" data-move-up ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-move-down ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-remove>Delete</button></div></div>
     <div class="field"><label>Title</label><input data-field="heading"></div>
     <div class="field"><label>Topic description (optional)</label><textarea data-field="description" rows="2"></textarea></div>
-    <div class="field"><label>Content</label><textarea class="rich-editor" data-field="body" rows="10"></textarea></div>
-    <div class="field"><label>Supporting resource links (optional, one URL per line)</label><textarea data-field="resources" rows="3" placeholder="https://example.org/document.pdf"></textarea><small>Use the image button in Content to upload and embed supporting images.</small></div>
+    <div class="field"><label>Content</label><textarea data-field="body" rows="10"></textarea></div>
+    <div class="field"><label>Supporting resource links (optional, one URL per line)</label><textarea data-field="resources" rows="3" placeholder="https://example.org/document.pdf"></textarea></div>
     <div class="field"><label>Publication status</label><select data-field="status"><option value="draft">Draft — hidden from visitors</option><option value="published">Published — visible to visitors</option></select></div>
     <div class="recruitment-preview" data-topic-preview-output hidden></div>
   </article>`;
@@ -310,7 +264,6 @@ function fillSectionCard(card, kind, item) {
 }
 
 function collectPageItems(kind) {
-  syncRichEditors();
   return [...pageSectionsBody.querySelectorAll('.page-section-item')].map((card) => {
     const get = (field) => card.querySelector(`[data-field="${field}"]`);
     const value = (field) => (get(field) ? get(field).value : '');
@@ -350,7 +303,6 @@ function persistPageItems(pageKey, kind, items, successMessage = '') {
 }
 
 function renderPageSections() {
-  pageSectionsBody.querySelectorAll('textarea.rich-editor').forEach((field) => window.tinymce?.get(field.id)?.remove());
   const pageKey = contentPage.value;
   const kind = pageEditorKinds[pageKey];
   const notes = {
@@ -369,11 +321,9 @@ function renderPageSections() {
   pageSectionsBody.innerHTML = `<div class="page-sections-head"><h2>Page sections</h2><button class="button button-ghost" type="button" id="add-page-section">Add ${labels[kind]}</button></div><div id="page-sections-list">${items.map((item, index) => skeletonFor(index, items.length)).join('') || `<p class="muted">No ${labels[kind]}s yet. Use "Add ${labels[kind]}".</p>`}</div><button class="button button-lime" type="button" id="save-page-sections">Save page sections <span>↗</span></button>`;
   const cards = [...pageSectionsBody.querySelectorAll('.page-section-item')];
   cards.forEach((card, index) => fillSectionCard(card, kind, items[index]));
-  initRichEditors(pageSectionsBody);
 
   cards.forEach((card, index) => {
     card.querySelector('[data-topic-preview]')?.addEventListener('click', () => {
-      syncRichEditors();
       const item = collectPageItems(kind)[index];
       const preview = card.querySelector('[data-topic-preview-output]');
       if (!item.heading || (!item.description && !item.body && !item.resources.length)) {
@@ -440,7 +390,7 @@ function bindAdminViews() {
 
 function resetPartnershipForm() {
   partnershipForm.reset();
-  setRichEditorValue('#partnership-description', '');
+  setTextareaValue('#partnership-description', '');
   document.querySelector('#partnership-id').value = '';
   document.querySelector('#partnership-submit-label').textContent = 'Add Package';
 }
@@ -457,7 +407,7 @@ function renderPartnerships() {
     document.querySelector('#partnership-price').value = partner.price;
     document.querySelector('#partnership-title').value = partner.title;
     document.querySelector('#partnership-description').value = partner.description;
-    setRichEditorValue('#partnership-description', partner.description);
+    setTextareaValue('#partnership-description', partner.description);
     document.querySelector('#partnership-benefits').value = partner.benefits;
     document.querySelector('#partnership-submit-label').textContent = 'Update Package';
     partnershipForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -644,7 +594,7 @@ function fillPageContentForm() {
   const content = getPageContent(contentPage.value);
   document.querySelector('#content-eyebrow').value = content.eyebrow || '';
   document.querySelector('#content-title').value = content.title || '';
-  setRichEditorValue('#content-text', content.text);
+  setTextareaValue('#content-text', content.text);
 }
 
 function formatInquiryDate(inquiry) {
@@ -729,7 +679,7 @@ function saveAdminData(successMessage = '') {
 
 function fillCompanyForm() {
   document.querySelector('#about-title').value = data.about.title;
-  setRichEditorValue('#about-text', data.about.text);
+  setTextareaValue('#about-text', data.about.text);
   document.querySelector('#email').value = data.contact.email;
   document.querySelector('#phone').value = data.contact.phone;
   document.querySelector('#location').value = data.contact.location;
@@ -739,7 +689,7 @@ function fillCompanyForm() {
 
 function resetConferenceForm() {
   conferenceForm.reset();
-  setRichEditorValue('#conference-description', '');
+  setTextareaValue('#conference-description', '');
   document.querySelector('#conference-id').value = '';
   document.querySelector('#conference-submit-label').textContent = 'Add Conference';
 }
@@ -869,7 +819,7 @@ function editConference(id) {
   document.querySelector('#conference-title').value = event.title;
   document.querySelector('#conference-date').value = event.date;
   document.querySelector('#conference-status').value = event.status;
-  setRichEditorValue('#conference-description', event.description);
+  setTextareaValue('#conference-description', event.description);
   document.querySelector('#conference-location').value = event.location;
   document.querySelector('#conference-theme').value = event.theme;
   document.querySelector('#conference-submit-label').textContent = 'Update Conference';
@@ -897,7 +847,6 @@ function renderGalleryPreview() {
 
 companyForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (!validateRichEditors(companyForm)) return;
   data.about.title = document.querySelector('#about-title').value;
   data.about.text = document.querySelector('#about-text').value;
   data.contact.email = document.querySelector('#email').value;
@@ -944,7 +893,6 @@ document.querySelector('#recruitment-clear-button').addEventListener('click', cl
 
 pageContentForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (!validateRichEditors(pageContentForm)) return;
   data.pageContent = data.pageContent || {};
   data.pageContent[contentPage.value] = {
     eyebrow: document.querySelector('#content-eyebrow').value,
@@ -956,7 +904,6 @@ pageContentForm.addEventListener('submit', (event) => {
 
 partnershipForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (!validateRichEditors(partnershipForm)) return;
   data.partnerships = data.partnerships || [];
   const idField = document.querySelector('#partnership-id');
   const values = { type: document.querySelector('#partnership-type').value, name: document.querySelector('#partnership-name').value, price: document.querySelector('#partnership-price').value, title: document.querySelector('#partnership-title').value, description: document.querySelector('#partnership-description').value, benefits: document.querySelector('#partnership-benefits').value };
@@ -977,7 +924,6 @@ partnershipForm.addEventListener('submit', (event) => {
 
 conferenceForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  if (!validateRichEditors(conferenceForm)) return;
   const idField = document.querySelector('#conference-id');
   const values = { title: document.querySelector('#conference-title').value, date: document.querySelector('#conference-date').value, status: document.querySelector('#conference-status').value, description: document.querySelector('#conference-description').value, location: document.querySelector('#conference-location').value, theme: document.querySelector('#conference-theme').value };
   let successMessage;
@@ -1045,7 +991,6 @@ renderInquiries();
 renderPartnerships();
 renderPartnershipCms();
 bindAdminViews();
-initRichEditors();
 if (window.NVS_ADMIN_CONTENT_ERROR) showMessage(`Could not load saved admin content: ${window.NVS_ADMIN_CONTENT_ERROR}`);
 
 // After a successful login the API token exists, so reload enquiries from the server.

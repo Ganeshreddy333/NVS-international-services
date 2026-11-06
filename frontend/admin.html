@@ -16,7 +16,6 @@
   <link rel="stylesheet" href="pages.css?v=20261106-partnership-cms">
   <link rel="stylesheet" href="partnership.css?v=20261106-cms">
   <link rel="stylesheet" href="recruitment.css?v=20261106-careers-listings">
-  <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
 <body>
   <header class="site-header">
@@ -64,7 +63,7 @@
           <div class="field"><label for="content-page">Choose page</label><select id="content-page"><option value="home">Home</option><option value="about">About Us</option><option value="conferences">Conferences</option><option value="sponsors">Sponsor &amp; Exhibit</option><option value="gallery">Gallery</option><option value="general">General Information</option><option value="contact">Contact Us</option></select></div>
           <div class="field"><label for="content-eyebrow">Page label</label><input id="content-eyebrow" required></div>
           <div class="field"><label for="content-title">Main heading</label><input id="content-title" required></div>
-          <div class="field"><label for="content-text">Introduction text</label><textarea class="form-control rich-editor" id="content-text" required></textarea></div>
+          <div class="field"><label for="content-text">Introduction text</label><textarea class="form-control" id="content-text" required></textarea></div>
           <button class="button button-lime" type="submit">Save Page Content <span>↗</span></button>
         </form>
       </section>
@@ -77,7 +76,7 @@
           <h2>Company and Contact Information</h2>
           <form id="company-form">
             <div class="field"><label for="about-title">About heading</label><input id="about-title" required></div>
-            <div class="field"><label for="about-text">About text</label><textarea class="form-control rich-editor" id="about-text" required></textarea></div>
+            <div class="field"><label for="about-text">About text</label><textarea class="form-control" id="about-text" required></textarea></div>
             <div class="field"><label for="email">Email</label><input id="email" type="email" required></div>
             <div class="field"><label for="phone">Phone</label><input id="phone" required></div>
             <div class="field"><label for="whatsapp-number">WhatsApp number</label><input id="whatsapp-number" type="tel" inputmode="tel" placeholder="9391720171" required><small>Use a 10 digit Indian mobile number or include the country code.</small></div>
@@ -96,7 +95,7 @@
             <div class="field"><label for="conference-title">Conference title</label><input id="conference-title" required></div>
             <div class="field"><label for="conference-date">Date</label><input id="conference-date" placeholder="March 3–4, 2027" required></div>
             <div class="field"><label for="conference-status">Status</label><select id="conference-status"><option value="upcoming">Upcoming conference</option><option value="previous">Previous held conference</option></select></div>
-            <div class="field"><label for="conference-description">Description</label><textarea class="form-control rich-editor" id="conference-description" required></textarea></div>
+            <div class="field"><label for="conference-description">Description</label><textarea class="form-control" id="conference-description" required></textarea></div>
             <div class="field"><label for="conference-location">Location or mode</label><input id="conference-location" required></div>
             <div class="field"><label for="conference-theme">Theme</label><input id="conference-theme" required></div>
             <button class="button button-lime" type="submit"><span id="conference-submit-label">Add Conference</span> <span>↗</span></button><button class="button button-ghost clear-button" type="button" id="cancel-edit">Clear</button>
