@@ -1670,7 +1670,14 @@ function renderPartnershipSection(section, preview = false) {
 }
 
 function renderAccordion(sections = []) {
-  return (Array.isArray(sections) ? sections : []).map((item) => `<details><summary>${renderInline(item.heading)} <span>+</span></summary><div class="details-body">${renderRichBody(item.body)}</div></details>`).join('');
+  return (Array.isArray(sections) ? sections : [])
+    .filter((item) => item && item.status !== 'draft' && item.status !== 'unpublished' && String(item.heading || '').trim() && (String(item.description || '').trim() || String(item.body || '').trim() || (Array.isArray(item.resources) && item.resources.length)))
+    .map((item) => {
+      const resources = (Array.isArray(item.resources) ? item.resources : [])
+        .filter((url) => /^https:\/\//i.test(String(url)))
+        .map((url) => `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Supporting resource <span aria-hidden="true">↗</span></a></li>`).join('');
+      return `<details><summary>${renderInline(item.heading)} <span>+</span></summary><div class="details-body">${item.description ? `<p class="general-topic-description">${renderInline(item.description)}</p>` : ''}${renderRichBody(item.body)}${resources ? `<ul class="general-topic-resources">${resources}</ul>` : ''}</div></details>`;
+    }).join('');
 }
 
 function renderHeader(activePage = '') {
@@ -2093,7 +2100,8 @@ function partnerCard(partner) {
 }
 
 function renderGeneralPage() {
-  renderShell('general-page', 'general', `${pageIntro('general', '07', 'GENERAL INFORMATION', 'General Information', 'Guidelines, policies, publication details, and participant support.') }<section class="page-section section-light"><div class="accordion">${generalDetails()}</div></section>`);
+  const topics = generalDetails();
+  renderShell('general-page', 'general', `${pageIntro('general', '07', 'GENERAL INFORMATION', 'General Information', 'Guidelines, policies, publication details, and participant support.') }<section class="page-section section-light"><div class="accordion">${topics || '<p class="muted">Information for this page is being prepared. Please check back soon.</p>'}</div></section>`);
   document.querySelectorAll('details').forEach((detail) => detail.addEventListener('toggle', () => { if (detail.open) document.querySelectorAll('details[open]').forEach((other) => { if (other !== detail) other.removeAttribute('open'); }); }));
 }
 

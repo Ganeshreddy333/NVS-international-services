@@ -291,6 +291,75 @@ function public_recruitment_list(mixed $value): array
     return $publicListings;
 }
 
+function normalize_general_topics(mixed $value): array
+{
+    if (!is_array($value) || count($value) > 200) {
+        respond(['error' => 'General information must contain no more than 200 topics.'], 400);
+    }
+
+    $topics = [];
+    $ids = [];
+    foreach ($value as $index => $topic) {
+        if (!is_array($topic)) {
+            respond(['error' => 'Invalid general information topic.'], 400);
+        }
+        $id = recruitment_string($topic['id'] ?? '', 'topic ID', 100);
+        $heading = recruitment_string($topic['heading'] ?? '', 'topic title', 240);
+        $description = recruitment_string($topic['description'] ?? '', 'topic description', 2000);
+        $body = recruitment_string($topic['body'] ?? '', 'topic content', 100000);
+        if ($id === '' || $heading === '' || in_array($id, $ids, true)) {
+            respond(['error' => 'Each general information topic needs a unique ID and title.'], 400);
+        }
+        $ids[] = $id;
+        $status = $topic['status'] ?? 'published';
+        if (!is_string($status) || !in_array($status, ['draft', 'published'], true)) {
+            respond(['error' => 'General information topic status must be draft or published.'], 400);
+        }
+        $resources = $topic['resources'] ?? [];
+        if (!is_array($resources) || count($resources) > 25) {
+            respond(['error' => 'A topic can have up to 25 supporting resource links.'], 400);
+        }
+        $cleanResources = [];
+        foreach ($resources as $resource) {
+            $resource = recruitment_string($resource, 'supporting resource link', 2048);
+            if (!valid_website_url($resource)) {
+                respond(['error' => 'Supporting resource links must be valid HTTPS or HTTP URLs.'], 400);
+            }
+            $cleanResources[] = $resource;
+        }
+        if ($status === 'published' && $description === '' && $body === '' && !$cleanResources) {
+            respond(['error' => 'Published general information topics need a description, detailed content, or supporting resource.'], 400);
+        }
+        $createdAt = recruitment_string($topic['createdAt'] ?? '', 'topic created date', 40) ?: gmdate('c');
+        $updatedAt = gmdate('c');
+        $topics[] = [
+            'id' => $id,
+            'heading' => $heading,
+            'description' => $description,
+            'body' => $body,
+            'resources' => $cleanResources,
+            'displayOrder' => $index,
+            'status' => $status,
+            'createdAt' => $createdAt,
+            'updatedAt' => $updatedAt,
+        ];
+    }
+    return $topics;
+}
+
+function public_general_topics(mixed $value): array
+{
+    if (!is_array($value)) {
+        return [];
+    }
+    return array_values(array_filter($value, static function (mixed $topic): bool {
+        return is_array($topic)
+            && ($topic['status'] ?? 'published') === 'published'
+            && trim((string)($topic['heading'] ?? '')) !== ''
+            && (trim((string)($topic['description'] ?? '')) !== '' || trim((string)($topic['body'] ?? '')) !== '' || !empty($topic['resources']));
+    }));
+}
+
 function partnership_string(mixed $value, string $key, int $maxLength): string
 {
     if (!is_string($value) || strlen($value) > $maxLength) {

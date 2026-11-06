@@ -50,6 +50,8 @@ Card 13 on the Sponsor & Exhibit page uses the existing `site_content` JSON docu
 
 Recruitment listings use the same `site_content` JSON document and authenticated content update workflow. Administrators manage drafts, publication state, and application details from Admin > Recruitment. Public `GET api/content.php` returns only published listings with a valid application URL or email address and a deadline that has not passed; the existing Careers page renders them immediately after “Who This Work Serves.”
 
+General Information topics are managed from Admin > General Information. Topics support a title, optional summary, rich detailed content (including existing image uploads), resource links, publication state, preview, deletion, and ordering. Public content responses include only published, non-empty topics; admin drafts are excluded from browser caching as well as the public API.
+
 ## Local server
 
 From the repository root, run `php -S 127.0.0.1:8002 -t frontend` and visit `http://127.0.0.1:8002/`. Do not use a static-only server for PHP endpoints.

@@ -41,6 +41,7 @@
   <div id="admin-app" class="is-hidden">
     <nav class="admin-tabs" aria-label="Admin sections">
       <a class="active" href="#content-view" data-admin-view="content-view">Content</a>
+      <a href="#content-view" data-general-manager>General Information</a>
       <a href="#information-view" data-admin-view="information-view">Website Information</a>
       <a href="#conference-view" data-admin-view="conference-view">Conferences</a>
       <a href="#partnership-view" data-admin-view="partnership-view">Partnership / 13</a>
@@ -217,7 +218,7 @@
     </main>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="api.js?v=20261106-careers-listings"></script>
+  <script src="api.js?v=20261106-general-topics"></script>
   <script>
     // Load public content first, then fetch the private admin snapshot if this session is authenticated.
     (async () => {
@@ -229,7 +230,7 @@
           window.NVS_ADMIN_CONTENT_ERROR = error.message;
         }
       }
-      ['site.js?v=20261106-careers-listings', 'auth.js?v=20260928-api', 'admin.js?v=20261106-careers-listings'].reduce(
+      ['site.js?v=20261106-general-topics', 'auth.js?v=20260928-api', 'admin.js?v=20261106-general-topics'].reduce(
         (chain, src) => chain.then(() => new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = src;

@@ -13,6 +13,9 @@ if ($method === 'GET') {
             throw new UnexpectedValueException('Stored content must be a JSON object.');
         }
         $content = sanitize_content($content);
+        if (isset($content['pages']['general']['sections'])) {
+            $content['pages']['general']['sections'] = public_general_topics($content['pages']['general']['sections']);
+        }
         if (array_key_exists('recruitment', $content)) {
             $content['recruitment'] = public_recruitment_list($content['recruitment']);
         }
@@ -44,6 +47,9 @@ if ($method !== 'PUT') {
 require_admin();
 require_csrf();
 $incoming = request_data(10_000_000);
+if (isset($incoming['pages']['general']['sections'])) {
+    normalize_general_topics($incoming['pages']['general']['sections']);
+}
 if (array_key_exists('recruitment', $incoming)) {
     normalize_recruitment_list($incoming['recruitment']);
 }
@@ -51,6 +57,9 @@ if (array_key_exists('partnershipSection', $incoming)) {
     normalize_partnership_section($incoming['partnershipSection']);
 }
 $content = sanitize_content($incoming);
+if (isset($content['pages']['general']['sections'])) {
+    $content['pages']['general']['sections'] = normalize_general_topics($content['pages']['general']['sections']);
+}
 if (array_key_exists('recruitment', $content)) {
     $content['recruitment'] = normalize_recruitment_list($content['recruitment']);
 }

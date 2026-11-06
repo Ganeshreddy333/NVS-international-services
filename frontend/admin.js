@@ -244,9 +244,13 @@ function blockCardSkeleton(index, total) {
 
 function accordionCardSkeleton(index, total) {
   return `<article class="page-section-item" data-index="${index}">
-    <div class="page-section-head"><strong>Item ${index + 1}</strong><div class="event-actions"><button type="button" data-move-up ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-move-down ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-remove>Delete</button></div></div>
+    <div class="page-section-head"><strong>Topic ${index + 1}</strong><div class="event-actions"><button type="button" data-topic-preview>Preview</button><button type="button" data-move-up ${index === 0 ? 'disabled' : ''}>Move up</button><button type="button" data-move-down ${index === total - 1 ? 'disabled' : ''}>Move down</button><button class="delete" type="button" data-remove>Delete</button></div></div>
     <div class="field"><label>Title</label><input data-field="heading"></div>
+    <div class="field"><label>Topic description (optional)</label><textarea data-field="description" rows="2"></textarea></div>
     <div class="field"><label>Content</label><textarea class="rich-editor" data-field="body" rows="10"></textarea></div>
+    <div class="field"><label>Supporting resource links (optional, one URL per line)</label><textarea data-field="resources" rows="3" placeholder="https://example.org/document.pdf"></textarea><small>Use the image button in Content to upload and embed supporting images.</small></div>
+    <div class="field"><label>Publication status</label><select data-field="status"><option value="draft">Draft — hidden from visitors</option><option value="published">Published — visible to visitors</option></select></div>
+    <div class="recruitment-preview" data-topic-preview-output hidden></div>
   </article>`;
 }
 
@@ -265,7 +269,10 @@ function fillSectionCard(card, kind, item) {
   const set = (field, value) => { const el = card.querySelector(`[data-field="${field}"]`); if (el) el.value = value == null ? '' : value; };
   if (kind === 'accordion') {
     set('heading', item.heading);
+    set('description', item.description);
     set('body', item.body);
+    set('resources', Array.isArray(item.resources) ? item.resources.join('\n') : '');
+    set('status', item.status || 'published');
     return;
   }
   if (kind === 'home') {
@@ -307,7 +314,14 @@ function collectPageItems(kind) {
   return [...pageSectionsBody.querySelectorAll('.page-section-item')].map((card) => {
     const get = (field) => card.querySelector(`[data-field="${field}"]`);
     const value = (field) => (get(field) ? get(field).value : '');
-    if (kind === 'accordion') return { id: card.dataset.id || makeSectionId(), heading: value('heading'), body: value('body') };
+    if (kind === 'accordion') return {
+      id: card.dataset.id || makeSectionId(),
+      heading: value('heading'),
+      description: value('description'),
+      body: value('body'),
+      resources: value('resources').split('\n').map((link) => link.trim()).filter(Boolean),
+      status: value('status') || 'draft'
+    };
     if (kind === 'home') return { id: card.dataset.id || makeSectionId(), number: value('number'), title: value('title'), text: value('text'), href: value('href') };
     const block = { id: card.dataset.id || makeSectionId(), variant: value('variant'), kicker: value('kicker'), heading: value('heading'), body: value('body'), listStyle: value('listStyle'), listItems: value('listItems').split('\n').map((line) => line.trim()).filter(Boolean), bodyAfter: value('bodyAfter') };
     if (get('signoff-strong')) block.signoff = { strong: value('signoff-strong'), span: value('signoff-span'), b: value('signoff-b') };
@@ -323,7 +337,7 @@ function getPageItemsRef(page, kind) {
 }
 
 function newPageItem(kind) {
-  if (kind === 'accordion') return { id: makeSectionId(), heading: '', body: '' };
+  if (kind === 'accordion') return { id: makeSectionId(), heading: '', description: '', body: '', resources: [], status: 'draft' };
   if (kind === 'home') return { id: makeSectionId(), number: '', title: '', text: '', href: '' };
   return { id: makeSectionId(), variant: '', kicker: '', heading: '', body: '', listStyle: 'none', listItems: [], bodyAfter: '' };
 }
@@ -358,6 +372,17 @@ function renderPageSections() {
   initRichEditors(pageSectionsBody);
 
   cards.forEach((card, index) => {
+    card.querySelector('[data-topic-preview]')?.addEventListener('click', () => {
+      syncRichEditors();
+      const item = collectPageItems(kind)[index];
+      const preview = card.querySelector('[data-topic-preview-output]');
+      if (!item.heading || (!item.description && !item.body && !item.resources.length)) {
+        showMessage('Add a title and topic content before previewing.');
+        return;
+      }
+      preview.innerHTML = renderAccordion([{ ...item, status: 'published' }]);
+      preview.hidden = false;
+    });
     card.querySelector('[data-move-up]')?.addEventListener('click', () => {
       const current = collectPageItems(kind);
       [current[index - 1], current[index]] = [current[index], current[index - 1]];
@@ -402,6 +427,13 @@ function bindAdminViews() {
     window.history.replaceState(null, '', `#${tab.dataset.adminView}`);
     if (tab.dataset.adminView === 'settings-view') loadAuditLog();
   }));
+  document.querySelector('[data-general-manager]')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    document.querySelector('[data-admin-view="content-view"]')?.click();
+    contentPage.value = 'general';
+    fillPageContentForm();
+    renderPageSections();
+  });
   showView(window.location.hash.slice(1) || 'content-view');
   if (window.location.hash === '#settings-view') loadAuditLog();
 }

@@ -16,6 +16,15 @@
     if (authenticated) {
       delete cachedData.partnershipSection;
       delete cachedData.recruitment;
+      if (Array.isArray(cachedData.pages?.general?.sections)) {
+        cachedData.pages = {
+          ...cachedData.pages,
+          general: {
+            ...cachedData.pages.general,
+            sections: cachedData.pages.general.sections.filter((topic) => topic?.status !== 'draft')
+          }
+        };
+      }
     }
     try {
       localStorage.setItem(DATA_KEY, JSON.stringify(cachedData));
@@ -60,6 +69,15 @@
     if (authenticated) {
       delete cachedData.partnershipSection;
       delete cachedData.recruitment;
+      if (Array.isArray(cachedData.pages?.general?.sections)) {
+        cachedData.pages = {
+          ...cachedData.pages,
+          general: {
+            ...cachedData.pages.general,
+            sections: cachedData.pages.general.sections.filter((topic) => topic?.status !== 'draft')
+          }
+        };
+      }
     }
     const cachedSerialized = JSON.stringify(cachedData);
     latestContent = data;
